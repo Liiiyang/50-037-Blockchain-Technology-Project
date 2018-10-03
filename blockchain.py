@@ -1,4 +1,4 @@
-import block
+from block import *
 import random
 import transaction
 import sk
@@ -13,7 +13,7 @@ class Blockchain:
         self.genesisBlock()
 
     def genesisBlock(self):
-        genesis_block = block.Block(0,time.time(),0,"0")
+        genesis_block = Block(0,time.time(),0,"0")
         genesis_block.hash = genesis_block.get_block_hash()
         self.chain.append(genesis_block)
       
