@@ -45,13 +45,16 @@ class Blockchain:
                 block_hash == block.compute_hash())
 
     def proof_of_work(self, block):
-        block.nonce = 0
-        computed_hash = block.compute_hash()
-        while computed_hash.startswith('0' * Blockchain.difficulty):
-            block.nonce += 1
-            computed_hash = block.compute_hash()
-
-        return computed_hash
+		random.seed()
+		found = False
+		foundNonce = ''
+		while (found != True):
+			foundNonce = hashlib.sha256(random.randrange(2**256)).hexdigest()
+			block.header["nonce"] = foundNonce
+			blockWithNewNonce = block.getHeaderInJSON()
+			if (blockWithNewNonce < TARGET):
+				found = True
+		return foundNonce
     
     def start():
         return None

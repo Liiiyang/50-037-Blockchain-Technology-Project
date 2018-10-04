@@ -1,17 +1,20 @@
 import hashlib
+import json
 
 class Block:
     
-    def __init__(self, merkleRoot, timestamp, prevhash, transactions):
-        self.prevHeaderHash = prevHeaderHash
-        self.transactions = transactions		
-        self.timestamp = timestamp		#metadata
+    def __init__(self, merkleRoot, timestamp, prevhash, nonce, transactions=[]):
+        self.transactions = transactions
         self.header = {
+			"prevHeaderHash": prevhash
         	"root": root,
         	"merkleRoot": merkleRoot,
-        	"nonce": hashlib.sha256(random.random()).hexdigest()
-
+        	"nonce": nonce
+			"timestamp": time.time()		#metadata
         }
+
+	def getHeaderInJSON(self):
+		return json.dumps(self.header)
 
     @property
     def get_block_hash(self):
