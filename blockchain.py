@@ -13,13 +13,15 @@ class Blockchain:
         self.transactionlist =[]
         self.chain =[]
         self.genesisBlock()
+        self.genesisBlockHash
 
     def genesisBlock(self):
         genesis_block = Block(0,time.time(),0,10,0)
         genesis_block.hash = genesis_block.getHeaderInJSON()
+        self.genesisBlockHash = genesis_block.hash        
         self.chain.append(genesis_block)
         print("Genesis: " + str(self.chain))
-      
+    
     @property
     def last_block(self):
         return self.chain[-1]
@@ -27,7 +29,8 @@ class Blockchain:
     def add(self, block, proof):
         print("Adding")
         previous_hash = self.last_block.hash
-
+        print("Prev: " + previous_hash)
+        print("Current: " + str(block.header["prevHeaderHash"]))
         if previous_hash != block.header["prevHeaderHash"]:
             print("1")
             return False
@@ -69,8 +72,8 @@ class Blockchain:
 if __name__ == "__main__":
     with open("transaction_hash.json") as json_file:
         data=json.load(json_file)
-    blockOne = Block(0,time.time(),0,10,data)
     bc = Blockchain()
+    blockOne = Block(0,time.time(),bc.genesisBlockHash,10,data)
     proof = bc.proof_of_work(blockOne)
     print(proof)
     bc.add(blockOne,proof)
