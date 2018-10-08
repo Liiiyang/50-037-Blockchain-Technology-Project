@@ -43,8 +43,8 @@ snd = 'Alice'
 amt = 1
 sk_string = sk.to_string()
 
-print sk_string
+print(sk_string)
 
 myTx = Transaction.new(rcv, snd, amt, sk_string)
-print myTx.receiver
-print myTx.signature
+print(myTx.receiver)
+print(myTx.signature)
