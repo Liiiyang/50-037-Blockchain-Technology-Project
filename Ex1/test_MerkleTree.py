@@ -57,10 +57,12 @@ m.add(data)
 m.build()
 root = m.get_root()
 node = m._get_nodes()
-print 'root is: ' + root
+# print 'root is: ' + root
+print('root is: {}'.format(root))
 proof = m.get_proof(any_leaf)
 if proof == False:
-	print 'try again!'
+	# print 'try again!'
+  print('Try again!')
 else:
 	result = verify_proof(any_leaf, proof, root)
 	assert result == True

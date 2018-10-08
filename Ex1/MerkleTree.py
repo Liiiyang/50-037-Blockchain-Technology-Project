@@ -14,7 +14,8 @@ import hashlib
 class MerkleNode():
 	def __init__(self, left=None, right=None, leafHash=None):
 		if leafHash is None:
-			self.myHash = hashlib.sha256(left.myHash + right.myHash).hexdigest()		# hash digest
+			msg = left.myHash + right.myHash
+			self.myHash = hashlib.sha256(msg.encode('ascii')).hexdigest()		# hash digest
 		else: 
 			self.myHash = leafHash
 		self.left = left			# MerkleNode
@@ -38,7 +39,7 @@ class MerkleTree():
 		for i in range(len(transaction_list)):
 
 			t = transaction_list[i]
-			h = hashlib.sha256(t).hexdigest()
+			h = hashlib.sha256(t.encode('ascii')).hexdigest()
 			m = MerkleNode(None, None, h)
 			self.nodes.append(m)
 	def build(self, list_of_merkleNodes=None):
@@ -107,7 +108,7 @@ class MerkleTree():
 		#
 		# Find and get node respective leaf_node
 		# Build list of Merkle Hash Proofs
-		hashFirst = hashlib.sha256(myTransaction).hexdigest()
+		hashFirst = hashlib.sha256(myTransaction.encode('ascii')).hexdigest()
 		leaf_node = None
 
 		for ln in self.nodes:
@@ -127,13 +128,16 @@ class MerkleTree():
 		return self.nodes
 
 def verify_proof(entry, list_of_mhp, root):
-	entry = hashlib.sha256(entry).hexdigest()
+	
+	entry = hashlib.sha256(entry.encode('ascii')).hexdigest()
 	current = entry
 	for mhp in list_of_mhp:
 		if mhp.is_left:
-			current = hashlib.sha256(mhp.myHash+current).hexdigest()
+			msg = mhp.myHash + current
+			current = hashlib.sha256(msg.encode('ascii')).hexdigest()
 		else:
-			current = hashlib.sha256(current + mhp.myHash).hexdigest()
+			msg = current + mhp.myHash
+			current = hashlib.sha256(msg.encode('ascii')).hexdigest()
 		if current == root:
 			return True
 		else:
