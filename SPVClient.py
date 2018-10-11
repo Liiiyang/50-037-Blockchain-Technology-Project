@@ -21,3 +21,5 @@ print(r)
 r = requests.get('http://127.0.0.1:5000/get-header')
 print(r.text)
 
+r = requests.get('http://127.0.0.1:5000/mine')
+print("Mining Results: " + r.text)

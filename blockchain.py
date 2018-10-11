@@ -12,12 +12,13 @@ class Blockchain:
     def __init__(self):
         self.transactionlist =[]
         self.chain =[]
+        self.second_chain=[]
         self.fork = {}
         self.genesisBlock()
 
     def genesisBlock(self):
         genesis_block = Block(0,time.time(),0,10,0)
-        genesis_block.hash = genesis_block.getHeaderInJSON()       
+        genesis_block.hash = genesis_block.getHeaderInHash()       
         self.chain.append(genesis_block)
         self.fork[genesis_block.hash] = self.chain
         print("Genesis: " + str(self.chain))
@@ -29,9 +30,9 @@ class Blockchain:
     def add(self, block, proof, fork, position):
         print("Adding")
         if "Yes" in fork:
-            if self.chain[-position]:
-                previous_hash = self.chain[-position].hash
-                self.second_chain = self.chain[:-position]
+            if self.resolve()[-position]:
+                previous_hash = self.resolve()[-position].hash
+                self.second_chain = self.resolve()[:-position+1]
                 print("Prev: " + previous_hash)
                 print("Current: " + str(block.header["prevHeaderHash"]))
                 if previous_hash != block.header["prevHeaderHash"]:
@@ -64,7 +65,7 @@ class Blockchain:
 
             block.hash = proof
             self.chain.append(block)
-            self.fork[block.hash] = self.chain
+            #self.fork[block.hash] = self.chain
             print("Block Added")
         return True
 
@@ -76,7 +77,7 @@ class Blockchain:
         Validate: Checks if the hash contains leading zeroes
         """
         return (block_hash.startswith('0' * Blockchain.difficulty) and
-                block_hash == block.getHeaderInJSON())
+                block_hash == block.getHeaderInHash())
 
     def proof_of_work(self, block):
         print("Working..")
@@ -85,9 +86,9 @@ class Blockchain:
         foundNonce = ''
         while (found != True):
             print("Finding..")
-            foundNonce = hashlib.sha256(str(random.randrange(2**256)).encode()).hexdigest()
-            block.header["nonce"] = foundNonce
-            blockWithNewNonce = block.getHeaderInJSON()
+            block.header["nonce"] = random.randrange(2**256)
+            foundNonce = hashlib.sha256(str(block.header["nonce"]).encode()).hexdigest()
+            blockWithNewNonce = block.getHeaderInHash()
             if (blockWithNewNonce < Blockchain.TARGET) and blockWithNewNonce.startswith('0' * Blockchain.difficulty):
                 print("Block: " + str(blockWithNewNonce))
                 print("Found!")
@@ -105,9 +106,13 @@ if __name__ == "__main__":
     proof = bc.proof_of_work(blockOne)
     print(proof)
     bc.add(blockOne,proof,"No",0)
+
     blockTwo = Block(0,time.time(),bc.chain[-2].hash,10,data)
     proofTwo = bc.proof_of_work(blockTwo)
     print(proofTwo)
     bc.add(blockTwo,proofTwo,"Yes",2)
+
     print("Total Chain: " + str(bc.chain))
     print("Forks: " + str(bc.fork.values()))
+    print("Resolve: " + str(bc.resolve()))
+    

@@ -8,7 +8,7 @@ from flask import Flask, jsonify, json, request, Response
 app = Flask(__name__) 
 
 @app.route('/create-transaction', methods = ['GET'])
-def test():
+def get_transaction():
     data = {
        'Transaction'  : '',
     }
@@ -59,6 +59,17 @@ def get_header():
 @app.route('/get-proof', methods = ['GET'])   
 def get_proof():
     pass
+
+@app.route('/mine', methods = ['GET'])   
+def get_mine():
+    data = {
+       'Mine'  : True,
+    }
+    js = json.dumps(data)
+    resp = Response(js, status=200, mimetype='application/json')
+    resp.headers['Link'] = 'http://luisrei.com'
+    return resp
+
 
 from argparse import ArgumentParser  
 parser = ArgumentParser()  

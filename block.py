@@ -13,9 +13,8 @@ class Block:
 			"timestamp": timestamp		#metadata
         }
 
-    def getHeaderInJSON(self):
+    def getHeaderInHash(self):
         return hashlib.sha256(json.dumps(self.header).encode()).hexdigest()
-
     @property
     def get_block_hash(self):
         block_string = json.dumps(self.__dict__, sort_keys=True)
