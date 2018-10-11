@@ -1,6 +1,6 @@
 from block import *
 import random
-import transaction
+# import transaction
 import json
 import time
 
@@ -18,11 +18,11 @@ class Blockchain:
 
     def genesisBlock(self):
         genesis_block = Block(0,time.time(),0,10,0)
-        genesis_block.hash = genesis_block.getHeaderInHash()       
+        # genesis_block.hash = genesis_block.getHeaderInHash()
+        myGenesisBlockHeaderHash = genesis_block.getHeaderInHash()
         self.chain.append(genesis_block)
-        self.fork[genesis_block.hash] = self.chain
+        self.fork[myGenesisBlockHeaderHash] = self.chain
         print("Genesis: " + str(self.chain))
-    
     @property
     def last_block(self):
         return self.chain[-1]
@@ -31,7 +31,7 @@ class Blockchain:
         print("Adding")
         if "Yes" in fork:
             if self.resolve()[-position]:
-                previous_hash = self.resolve()[-position].hash
+                previous_hash = self.resolve()[-position].getHeaderInHash()
                 self.second_chain = self.resolve()[:-position+1]
                 print("Prev: " + previous_hash)
                 print("Current: " + str(block.header["prevHeaderHash"]))
@@ -43,16 +43,14 @@ class Blockchain:
                     print("2")
                     return False
 
-                block.hash = proof
                 self.second_chain.append(block)
-                self.fork[block.hash] = self.second_chain
+                self.fork[proof] = self.second_chain
             else:
                 print("Invalid Block")
                 return False
 
         elif "No" in fork and self.resolve(): 
-            block.hash = proof
-            previous_hash = self.last_block.hash
+            previous_hash = self.last_block.getHeaderInHash()
             print("Prev: " + previous_hash)
             print("Current: " + str(block.header["prevHeaderHash"]))
             if previous_hash != block.header["prevHeaderHash"]:
@@ -63,7 +61,6 @@ class Blockchain:
                 print("2")
                 return False
 
-            block.hash = proof
             self.chain.append(block)
             #self.fork[block.hash] = self.chain
             print("Block Added")
@@ -99,15 +96,15 @@ class Blockchain:
         return max(self.fork.values(),key=len)
 
 if __name__ == "__main__":
-    with open("transaction_hash.json") as json_file:
+    with open("Ex1/transaction_hash.json") as json_file:
         data=json.load(json_file)
     bc = Blockchain()
-    blockOne = Block(0,time.time(),bc.last_block.hash,10,data)
+    blockOne = Block(0,time.time(),bc.last_block.getHeaderInHash(),10,data)
     proof = bc.proof_of_work(blockOne)
     print(proof)
     bc.add(blockOne,proof,"No",0)
 
-    blockTwo = Block(0,time.time(),bc.chain[-2].hash,10,data)
+    blockTwo = Block(0,time.time(),bc.chain[-2].getHeaderInHash(),10,data)
     proofTwo = bc.proof_of_work(blockTwo)
     print(proofTwo)
     bc.add(blockTwo,proofTwo,"Yes",2)
