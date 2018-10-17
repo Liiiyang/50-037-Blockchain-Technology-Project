@@ -14,15 +14,24 @@ class Blockchain:
         self.chain =[]
         self.second_chain=[]
         self.fork = {}
-        self.genesisBlock()
 
-    def genesisBlock(self):
+    @classmethod
+    def new(cls):
         genesis_block = Block(0,time.time(),0,10,0)
-        # genesis_block.hash = genesis_block.getHeaderInHash()
         myGenesisBlockHeaderHash = genesis_block.getHeaderInHash()
-        self.chain.append(genesis_block)
-        self.fork[myGenesisBlockHeaderHash] = self.chain
+        bc = cls()
+        bc.chain.append(genesis_block)
+        bc.fork[myGenesisBlockHeaderHash] = bc.chain
         print("Genesis: " + str(self.chain))
+        return bc
+
+    # def genesisBlock(self):
+    #     genesis_block = Block(0,time.time(),0,10,0)
+    #     # genesis_block.hash = genesis_block.getHeaderInHash()
+    #     myGenesisBlockHeaderHash = genesis_block.getHeaderInHash()
+    #     self.chain.append(genesis_block)
+    #     self.fork[myGenesisBlockHeaderHash] = self.chain
+    #     print("Genesis: " + str(self.chain))
     @property
     def last_block(self):
         return self.chain[-1]
@@ -95,16 +104,18 @@ class Blockchain:
     def resolve(self):
         return max(self.fork.values(),key=len)
 
+    
+
 if __name__ == "__main__":
     with open("Ex1/transaction_hash.json") as json_file:
         data=json.load(json_file)
     bc = Blockchain()
-    blockOne = Block(0,time.time(),bc.last_block.getHeaderInHash(),10,data)
+    blockOne = Block(time.time(),bc.last_block.getHeaderInHash(),10,data)
     proof = bc.proof_of_work(blockOne)
     print(proof)
     bc.add(blockOne,proof,"No",0)
 
-    blockTwo = Block(0,time.time(),bc.chain[-2].getHeaderInHash(),10,data)
+    blockTwo = Block(time.time(),bc.chain[-2].getHeaderInHash(),10,data)
     proofTwo = bc.proof_of_work(blockTwo)
     print(proofTwo)
     bc.add(blockTwo,proofTwo,"Yes",2)
