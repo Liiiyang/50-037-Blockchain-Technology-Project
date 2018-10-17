@@ -17,13 +17,17 @@ class Blockchain:
 
     @classmethod
     def new(cls):
-        genesis_block = Block(0,time.time(),0,10,0)
+        genesis_block = Block(time.time(),0,10,['0','0'])
         myGenesisBlockHeaderHash = genesis_block.getHeaderInHash()
         bc = cls()
         bc.chain.append(genesis_block)
         bc.fork[myGenesisBlockHeaderHash] = bc.chain
         print("Genesis: " + str(bc.chain))
         return bc
+
+    def to_json(self):
+        # Serializes object to JSON string
+        return json.dumps(self.__dict__)
 
     # def genesisBlock(self):
     #     genesis_block = Block(0,time.time(),0,10,0)
@@ -110,12 +114,12 @@ if __name__ == "__main__":
     with open("Ex1/transaction_hash.json") as json_file:
         data=json.load(json_file)
     bc = Blockchain.new()
-    blockOne = Block(0,time.time(),bc.last_block.getHeaderInHash(),10,data)
+    blockOne = Block(time.time(),bc.last_block.getHeaderInHash(),10,['123','456'])
     proof = bc.proof_of_work(blockOne)
     print(proof)
     bc.add(blockOne,proof,"No",0)
 
-    blockTwo = Block(0,time.time(),bc.chain[-2].getHeaderInHash(),10,data)
+    blockTwo = Block(time.time(),bc.chain[-2].getHeaderInHash(),10,['abc','def'])
     proofTwo = bc.proof_of_work(blockTwo)
     print(proofTwo)
     bc.add(blockTwo,proofTwo,"Yes",2)
