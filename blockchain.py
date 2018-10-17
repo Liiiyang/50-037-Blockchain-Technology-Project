@@ -22,7 +22,7 @@ class Blockchain:
         bc = cls()
         bc.chain.append(genesis_block)
         bc.fork[myGenesisBlockHeaderHash] = bc.chain
-        print("Genesis: " + str(self.chain))
+        print("Genesis: " + str(bc.chain))
         return bc
 
     # def genesisBlock(self):
@@ -109,13 +109,13 @@ class Blockchain:
 if __name__ == "__main__":
     with open("Ex1/transaction_hash.json") as json_file:
         data=json.load(json_file)
-    bc = Blockchain()
-    blockOne = Block(time.time(),bc.last_block.getHeaderInHash(),10,data)
+    bc = Blockchain.new()
+    blockOne = Block(0,time.time(),bc.last_block.getHeaderInHash(),10,data)
     proof = bc.proof_of_work(blockOne)
     print(proof)
     bc.add(blockOne,proof,"No",0)
 
-    blockTwo = Block(time.time(),bc.chain[-2].getHeaderInHash(),10,data)
+    blockTwo = Block(0,time.time(),bc.chain[-2].getHeaderInHash(),10,data)
     proofTwo = bc.proof_of_work(blockTwo)
     print(proofTwo)
     bc.add(blockTwo,proofTwo,"Yes",2)
