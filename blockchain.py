@@ -3,6 +3,16 @@ import random
 # import transaction
 import json
 import time
+import pickle
+
+def to_binary(object):
+    # Serializes object to JSON string
+    return pickle.dump(object, open("myobject", "wb"))
+
+def from_binary(object):
+    # Instantiates/Deserializes object from JSON string
+    me = pickle.load(open(object, "rb"))
+    return me
 
 class Blockchain:
 
@@ -11,7 +21,7 @@ class Blockchain:
 
     def __init__(self):
         self.transactionlist =[]
-        self.chain =[]
+        self.chain =[]      
         self.second_chain=[]
         self.fork = {}
 
@@ -24,10 +34,6 @@ class Blockchain:
         bc.fork[myGenesisBlockHeaderHash] = bc.chain
         print("Genesis: " + str(bc.chain))
         return bc
-
-    def to_json(self):
-        # Serializes object to JSON string
-        return json.dumps(self.__dict__)
 
     # def genesisBlock(self):
     #     genesis_block = Block(0,time.time(),0,10,0)
@@ -111,7 +117,7 @@ class Blockchain:
     
 
 if __name__ == "__main__":
-    with open("Ex1/transaction_hash.json") as json_file:
+    with open("transaction_hash.json") as json_file:
         data=json.load(json_file)
     bc = Blockchain.new()
     blockOne = Block(time.time(),bc.last_block.getHeaderInHash(),10,['123','456'])
@@ -124,7 +130,9 @@ if __name__ == "__main__":
     print(proofTwo)
     bc.add(blockTwo,proofTwo,"Yes",2)
 
-    print("Total Chain: " + str(bc.chain))
-    print("Forks: " + str(bc.fork.values()))
-    print("Resolve: " + str(bc.resolve()))
-    
+    print("Binary: " + str(to_binary(bc)))
+    print("Type: " + str(type(from_binary("myObject"))) )
+    print("Load: " + str(from_binary("myObject").last_block.getHeaderInHash()))
+    #print("Total Chain: " + str(bc.chain))
+    #print("Forks: " + str(bc.fork.values()))
+    #print("Resolve: " + str(bc.resolve()))
