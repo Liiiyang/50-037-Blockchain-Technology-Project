@@ -21,6 +21,8 @@ from collections import namedtuple
 # x = json.loads(data, object_hook=lambda d: namedtuple('X', d.keys())(*d.values()))
 # print x.name, x.hometown.name, x.hometown.id
 
+
+# TODO: Add nonce attribute to have uniqueness feature
 class Transaction():
   def __init__(self, rcv, snd, amt, cmmt):
     self.receiver = rcv

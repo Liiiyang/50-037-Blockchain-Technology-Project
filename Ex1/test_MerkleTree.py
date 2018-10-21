@@ -44,7 +44,7 @@ Open JSON
 with open('transaction_hash.json') as f:
 	data = json.load(f)
 data = data.split(",")
-# data = ['abc','def']
+data = ['abc','def']
 
 '''
 Run test

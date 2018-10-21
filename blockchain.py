@@ -3,11 +3,13 @@ import random
 # import transaction
 import json
 import time
+import requests # A bit clunky OOP?
 
 class Blockchain:
 
     difficulty = 2
     TARGET = '000ffffff'
+    LISTEN_RATE = 5             # Higher number => Slower rate
 
     def __init__(self):
         self.transactionlist =[]
@@ -22,12 +24,8 @@ class Blockchain:
         bc = cls()
         bc.chain.append(genesis_block)
         bc.fork[myGenesisBlockHeaderHash] = bc.chain
-        print("Genesis: " + str(bc.chain))
+        # print("Genesis: " + str(bc.chain))
         return bc
-
-    def to_json(self):
-        # Serializes object to JSON string
-        return json.dumps(self.__dict__)
 
     # def genesisBlock(self):
     #     genesis_block = Block(0,time.time(),0,10,0)
@@ -82,28 +80,52 @@ class Blockchain:
     def add_transactions(self, transaction):
         return self.transactionlist.append(transaction)
 
-    def validate(self, block, block_hash):
+    # def validate(self, block, block_hash):
+    def validate(self, block, proof):
         """
         Validate: Checks if the hash contains leading zeroes
         """
+        self.last_block["nonce"] = proof
+        block_hash = self.last_block.getHeaderInHash()
+        # return (block_hash.startswith('0' * Blockchain.difficulty) and
+        #         block_hash == block.getHeaderInHash())
         return (block_hash.startswith('0' * Blockchain.difficulty) and
-                block_hash == block.getHeaderInHash())
-
-    def proof_of_work(self, block):
+                        block_hash == block.getHeaderInHash())
+    
+    def proof_of_work(self, block, list_of_otherMiners):
+        '''
+        Mining and listening if other miners have found a new block
+        '''
         print("Working..")
         random.seed()
         found = False
         foundNonce = ''
+        listenCounter = LISTEN_RATE
         while (found != True):
+            # Mining
             print("Finding..")
-            block.header["nonce"] = random.randrange(2**256)
-            foundNonce = hashlib.sha256(str(block.header["nonce"]).encode()).hexdigest()
+            foundNonce = random.randrange(2**256)
+            block.header["nonce"] = foundNonce
+            # foundNonce = hashlib.sha256(str(block.header["nonce"]).encode()).hexdigest()
             blockWithNewNonce = block.getHeaderInHash()
             if (blockWithNewNonce < Blockchain.TARGET) and blockWithNewNonce.startswith('0' * Blockchain.difficulty):
                 print("Block: " + str(blockWithNewNonce))
                 print("Found!")
                 found = True
-                return blockWithNewNonce
+                # return blockWithNewNonce
+                return (True, foundNonce, 0)
+            # Listening
+            listenCounter -= 1
+            elif listenCounter == 0:
+                myHeight = len(self.chain)
+                for minerId in list_of_otherMiners:
+                    r = requests.get('http://127.0.0.1:{}/read-blockchain-height'.format(minerId))
+                    if int(r.content) > myHeight:
+                        # getBlock = requests.get('http://127.0.0.1:{}/read-lastBlock'.format(minerId))
+                        # theirBlock = pickle.loads(getBlock.content)
+                        return (False, 0, minerId)
+                listenCounter = LISTEN_RATE
+
 
     def resolve(self):
         return max(self.fork.values(),key=len)
