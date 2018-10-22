@@ -1,20 +1,20 @@
 import hashlib
 import json
-# from MerkleTree import *
+from MerkleTree import *
 
 class Block:
     
     def __init__(self, timestamp, prevhash, nonce, transactions):
         self.transactions = transactions
         # Initialize MerkleTree
-        # self._myMerkle = MerkleTree()
-        # self._myMerkle.add(transactions)
-        # self._myMerkle.build()
-        # _merkleRoot = self._myMerkle.get_root()
+        self._myMerkle = MerkleTree()
+        self._myMerkle.add(transactions)
+        self._myMerkle.build()
+        _merkleRoot = self._myMerkle.get_root()
 
         self.header = {
 			"prevHeaderHash": prevhash,
-        	# "merkleRoot": _merkleRoot,
+        	"merkleRoot": _merkleRoot,
         	"nonce": nonce,
 			"timestamp": timestamp		#metadata
         }
@@ -36,6 +36,7 @@ class Block:
     def get_merkleProofs(self, myTransaction):
         return self._myMerkle.get_proof(myTransaction)
 
+    # TODO: Consider restructure json.dumps(self.header) to concatenation.
     def getHeaderInHash(self):
         return hashlib.sha256(json.dumps(self.header).encode()).hexdigest()
     # @property

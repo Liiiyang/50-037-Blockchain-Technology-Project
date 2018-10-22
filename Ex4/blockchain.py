@@ -38,96 +38,118 @@ class Blockchain:
     def last_block(self):
         return self.chain[-1]
 
-    # def newAdd(self, block, nonce, toFork, position):
-    #     # TODO: Use nonce properly
+    def newAdd(self, newBlock, nonceToInsert, toFork=False, depthPosition=0):
+        longestChain = self.resolve()
+        if toFork:
+            targetBlock = longestChain[-depthPosition]
+            targetBlock.header["nonce"] = nonceToInsert        # replace current nonce with new nonce
+            if self.validate(targetBlock, newBlock):
+                newChain = longestChain[:-depthPosition]
+                newChain.append(targetBlock)            # targetBlock with new nonce
+                newChain.append(newBlock)
+                proof_of_work = newBlock.header["prevHeaderHash"]   # Using proof_of_work as dictionary key
+                self.fork[proof_of_work] = newChain
+        elif toFork == False:
+            targetBlock = self.last_block
+            targetBlock.header["nonce"] = nonceToInsert
+            if self.validate(targetBlock, newBlock):
+                longestChain.append(newBlock)
+        else:
+            print("toFork not defined")
+        self.chain = longestChain
 
-    def add(self, block, proof, toFork, position):
-        print("Adding")
-        if "Yes" in toFork:
-            if self.resolve()[-position]:
-                previous_hash = self.resolve()[-position].getHeaderInHash()
-                self.second_chain = self.resolve()[:-position+1]
-                print("Prev: " + previous_hash)
-                print("Current: " + str(block.header["prevHeaderHash"]))
-                if previous_hash != block.header["prevHeaderHash"]:
-                    print("1")
-                    return False
 
-                if not self.validate(block, proof):
-                    print("2")
-                    return False
+    # def add(self, block, proof, toFork, position):
+    #     print("Adding")
+    #     if "Yes" in toFork:
+    #         if self.resolve()[-position]:
+    #             previous_hash = self.resolve()[-position].getHeaderInHash()
+    #             self.second_chain = self.resolve()[:-position+1]
+    #             print("Prev: " + previous_hash)
+    #             print("Current: " + str(block.header["prevHeaderHash"]))
+    #             if previous_hash != block.header["prevHeaderHash"]:
+    #                 print("1")
+    #                 return False
 
-                self.second_chain.append(block)
-                self.fork[proof] = self.second_chain
-            else:
-                print("Invalid Block")
-                return False
+    #             if not self.validate(block, proof):
+    #                 print("2")
+    #                 return False
 
-        elif "No" in toFork and self.resolve(): 
-            previous_hash = self.last_block.getHeaderInHash()
-            print("Prev: " + previous_hash)
-            print("Current: " + str(block.header["prevHeaderHash"]))
-            if previous_hash != block.header["prevHeaderHash"]:
-                print("1")
-                return False
+    #             self.second_chain.append(block)
+    #             self.fork[proof] = self.second_chain
+    #         else:
+    #             print("Invalid Block")
+    #             return False
 
-            if not self.validate(block, proof):
-                print("2")
-                return False
+    #     elif "No" in toFork and self.resolve(): 
+    #         previous_hash = self.last_block.getHeaderInHash()
+    #         print("Prev: " + previous_hash)
+    #         print("Current: " + str(block.header["prevHeaderHash"]))
+    #         if previous_hash != block.header["prevHeaderHash"]:
+    #             print("1")
+    #             return False
 
-            self.chain.append(block)
-            #self.fork[block.hash] = self.chain
-            print("Block Added")
-        return True
+    #         if not self.validate(block, proof):
+    #             print("2")
+    #             return False
+
+    #         self.chain.append(block)
+    #         #self.fork[block.hash] = self.chain
+    #         print("Block Added")
+    #     return True
 
     def add_transactions(self, transaction):
         return self.transactionlist.append(transaction)
 
     # def validate(self, block, block_hash):
-    def validate(self, block, proof):
+    def validate(self, targetBlock, newBlock):
         """
         Validate: Checks if the hash contains leading zeroes
         """
-        self.last_block["nonce"] = proof
-        block_hash = self.last_block.getHeaderInHash()
+        # self.last_block["nonce"] = proof
+        # block_hash = self.last_block.getHeaderInHash()
         # return (block_hash.startswith('0' * Blockchain.difficulty) and
         #         block_hash == block.getHeaderInHash())
-        return (block_hash.startswith('0' * Blockchain.difficulty) and
-                        block_hash == block.getHeaderInHash())
+        proof_of_work = newBlock.header["prevHeaderHash"]
+        return (proof_of_work.startswith('0' * Blockchain.difficulty) and
+                        proof_of_work == targetBlock.getHeaderInHash())
     
-    # def proof_of_work(self, block, list_of_otherMiners):
-    #     '''
-    #     Mining and listening if other miners have found a new block
-    #     '''
-    #     print("Working..")
-    #     random.seed()
-    #     found = False
-    #     foundNonce = ''
-    #     listenCounter = LISTEN_RATE
-    #     while (found != True):
-    #         # Mining
-    #         print("Finding..")
-    #         foundNonce = random.randrange(2**256)
-    #         block.header["nonce"] = foundNonce
-    #         # foundNonce = hashlib.sha256(str(block.header["nonce"]).encode()).hexdigest()
-    #         blockWithNewNonce = block.getHeaderInHash()
-    #         if (blockWithNewNonce < Blockchain.TARGET) and blockWithNewNonce.startswith('0' * Blockchain.difficulty):
-    #             print("Block: " + str(blockWithNewNonce))
-    #             print("Found!")
-    #             found = True
-    #             # return blockWithNewNonce
-    #             return (True, foundNonce, 0)
-    #         # Listening
-    #         listenCounter -= 1
-    #         elif listenCounter == 0:
-    #             myHeight = len(self.chain)
-    #             for minerId in list_of_otherMiners:
-    #                 r = requests.get('http://127.0.0.1:{}/read-blockchain-height'.format(minerId))
-    #                 if int(r.content) > myHeight:
-    #                     # getBlock = requests.get('http://127.0.0.1:{}/read-lastBlock'.format(minerId))
-    #                     # theirBlock = pickle.loads(getBlock.content)
-    #                     return (False, 0, minerId)
-    #             listenCounter = LISTEN_RATE
+    def proof_of_work(self, block, list_of_otherMiners):
+        '''
+        Mining and listening if other miners have found a new block
+        '''
+        print("Working..")
+        random.seed()
+        found = False
+        foundNonce = ''
+        listenCounter = Blockchain.LISTEN_RATE
+        while (found != True):
+            # Mining
+            print("Finding..")
+            foundNonce = random.randrange(2**256)
+            block.header["nonce"] = foundNonce          # TODO: Check if this needs to be a string
+            # foundNonce = hashlib.sha256(str(block.header["nonce"]).encode()).hexdigest()
+            blockHeaderHashWithNewNonce = block.getHeaderInHash()
+            listenCounter -= 1
+            if (blockHeaderHashWithNewNonce < Blockchain.TARGET) and blockHeaderHashWithNewNonce.startswith('0' * Blockchain.difficulty):
+                print("Block: " + str(blockHeaderHashWithNewNonce))
+                print("Found!")
+                found = True
+                # return blockWithNewNonce
+                return (True, foundNonce, blockHeaderHashWithNewNonce, 0)
+            # Listening
+            elif listenCounter == 0:
+                if len(list_of_otherMiners) == 0:
+                    pass
+                else:
+                    myHeight = len(self.chain)
+                    for minerId in list_of_otherMiners:
+                        r = requests.get('http://127.0.0.1:{}/read-blockchain-height'.format(minerId))
+                        if int(r.content) > myHeight:
+                            # getBlock = requests.get('http://127.0.0.1:{}/read-lastBlock'.format(minerId))
+                            # theirBlock = pickle.loads(getBlock.content)
+                            return (False, 0, '', minerId)
+                listenCounter = Blockchain.LISTEN_RATE
 
 
     def resolve(self):
@@ -153,3 +175,37 @@ if __name__ == "__main__":
     print("Forks: " + str(bc.fork.values()))
     print("Resolve: " + str(bc.resolve()))
     
+
+'''
+## Week 2: SUTDcoin Blockchain Design v0.1
+
+### Question 1
+Design and implement `Blockchain` and `Block` classes. A `Blockchain` object
+contains `Block` object(s). Each `Block` object has
+
+- set of transactions that form a hash tree
+- header that includes
+    - hash of the previous header
+    - root of the hash tree
+    - timestamp (Unix timestamp expressed as an integer)
+    - nonce (a random number needed to generate PoW)
+
+Follow the same interface as in the `Transaction` class from the last week
+(there is no signing, thus do not implement `sign()`.)
+You need to implement `add()` to add a new block to the blockchain.
+Hash of every new block's header should be less than `TARGET` (a global parameter,
+set now to `00000fff...f`).
+
+Test your implementation.
+What checks have you implemented in `Blockchain`'s `validate()` ?
+
+
+### Question 2
+
+Introduce forks and their handling in your implementation.  Modify your
+implementation, such that `add()` allows to anchor a new block to a given
+arbitrary existing block.  Implement the `resolve()` method, that returns the
+longest chain (e.g., it can return the latest block of the longest chain).  Test
+your implementation.
+
+'''
