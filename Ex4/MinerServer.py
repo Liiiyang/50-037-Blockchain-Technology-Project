@@ -85,6 +85,25 @@ def read_transactions():
     #     json.dump(data, outfile)
     return jsonify(resp)
 
+
+# f = requests.get('http://127.0.0.1:{}/read-blockchain'.format(myId))
+# myBlockchain = pickle.loads(f.content)
+# TODO: Done
+@app.route('/read-blockchain', methods=['GET'])
+def read_blockchain():
+    return send_from_directory('./{}'.format(args.port),'blockchain')
+
+
+# For SPVClients
+# TODO: Read block header
+@app.route('/read-block-header', methods=['GET'])
+def read_block_header():
+    with open('./{}/blockchain'.format(args.port)) as f:
+        bc = pickle.load(f)
+        # print(bc)
+        # pickle.dump(newBlockchain, f)
+    return "ready"
+
 # Deprecated
 # @app.route('/get-header', methods = ['GET'])
 # def get_header():
@@ -116,11 +135,6 @@ def read_transactions():
 #     resp.headers['Link'] = 'http://luisrei.com'
 #     return resp
 
-# # For SPVClients
-# # TODO: Read block header
-# @app.route('/read-block-header', methods=['GET'])
-# def read_block_header():
-# 	return
 
 # # For checking who found a new nonce
 # @app.route('/read-blockchain-height', methods=['GET'])
@@ -153,10 +167,6 @@ def read_transactions():
 
 # 	return
 
-# Deprecated
-# @app.route('/mine/<path:filename>', methods = ['GET'])   
-# def get_mine(filename):
-#     return send_from_directory(UPLOAD_DIRECTORY, filename, as_attachment=True,attachment_filename='newFile')
 
 # Deprecated: Use local write instead
 # @app.route('/update-blockchain', methods=['POST'])

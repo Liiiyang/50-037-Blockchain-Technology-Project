@@ -67,6 +67,12 @@ class Miner():
         self.myPubKey = vk
         self.mySecretKey = sk
 
+    def _update_blockchain(self, newBlockchain):
+        with open('./{}/blockchain'.format(self.myId)) as f:
+            pickle.dump(newBlockchain, f)
+
+
+
     def mine_block(self):
         currentBlockchain = self.blockchain         # Note: careful of reference or deepCopy
         currentLastBlock = self.blockchain.last_block
