@@ -96,14 +96,18 @@ def read_blockchain():
 
 
 # For SPVClients
-# TODO: Read block header
+# f = requests.get('http://127.0.0.1:{}/read-block-header'.format(myId), params={'depth': 1})
+# TODO: Done
 @app.route('/read-block-header', methods=['GET'])
 def read_block_header():
+    depth = int(request.args['depth'])
     with open('./{}/blockchain'.format(args.port), 'rb') as f:
         bc = pickle.load(f)
-        print(bc)
-        # for b in bc.chain:
-    return "ready"
+    height = len(bc.chain)
+    ls = []
+    for b in bc.chain[height-depth:]:
+        ls.append(b.header)
+    return jsonify(ls)
 
 # Deprecated
 # @app.route('/get-header', methods = ['GET'])

@@ -2,6 +2,7 @@ from ecdsa import SigningKey, VerifyingKey, NIST192p
 import requests
 from Transaction import Transaction
 import json
+import codecs
 # Generate keys
 # sk = SigningKey.generate(curve=NIST192p)
 # vk = sk.get_verifying_key()
@@ -19,10 +20,13 @@ rcv = 'Bob'
 snd = 'Alice'
 amt = 1
 sk_string = sk.to_string()
+# sk_string = (sk.to_string()).hex()
+# codecs.encode(sk_string, 'hex').decode("utf-8")
+# print(sk_string)
 
 myTx = Transaction.new(rcv, snd, amt, sk_string)
 myTxJSON = myTx.to_json()
-print(myTxJSON)
+# print(myTxJSON)
 
 myId = 5000
 # headers = {'Content-type': 'text/plain'}
@@ -34,6 +38,12 @@ Test if
 '''
 r = requests.get('http://127.0.0.1:{}/read-transactions'.format(myId))
 msg = Transaction.from_json(r.content)
-print(r.content)
+# print(r.content)
+
+r = requests.get('http://127.0.0.1:{}/read-block-header'.format(myId), params={'depth': 1})
+msg = r.json()
+print(msg)
+
+
 # print(msg)
 # print(msg["AllTransactions"])

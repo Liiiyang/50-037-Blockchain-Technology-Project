@@ -81,7 +81,7 @@ class Miner():
         isVerified = True
         while isVerified:
             # mining and listening???
-            hasFound, newNonce, minerId = currentBlockchain.proof_of_work(currentLastBlock, otherMiners)
+            hasFound, newNonce, prevHeaderHash, minerId = currentBlockchain.proof_of_work(currentLastBlock, otherMiners)
             if hasFound == True:
                 # make new block
                 # HTTP GET all transactions
