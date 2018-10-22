@@ -22,7 +22,7 @@ Design and implement a Miner class realizing miner's functionalities. Then, impl
 import requests
 import json
 # from requests.auth import HTTPBasicAuth
-from transaction import Transaction
+from Transaction import Transaction
 from ecdsa import SigningKey, VerifyingKey, NIST192p
 import hashlib
 import random
@@ -31,8 +31,9 @@ from blockchain import *
 from block import Block
 import time
 
-
-MINER_ADDR = [5000, 5010, 5020, 5030, 5040]
+MINER_PORT = [5000, 5010, 5020, 5030, 5040]
+# TODO: Read all miner's public key
+MINER_PUBKEY = {}
 
 class Miner():
 	   # TARGET = 5			# Set from 
@@ -40,7 +41,7 @@ class Miner():
     def __init__(self, myId):
         # HTTP GET Blockchain from other miners
         foundBlockchain = False
-        for minerId in MINER_ADDR:
+        for minerId in MINER_PORT:
             if minerId == myId:
                 continue
             r = requests.get('http://127.0.0.1:{}/read-blockchain'.format(minerId))
@@ -56,19 +57,20 @@ class Miner():
             # Current Miner writes local. Other Miners read through network
             # r = requests.post('http://127.0.0.1:{}/update-blockchain'.format(myId), data=bc, headers={'Content-Type': 'application/octet-stream'})
 
-        # Read my public & private keys
+        # TODO: Read my public & private keys
         vk = VerifyingKey.from_pem(open('vk_{}.pem'.format(myId)).read())
         sk = SigningKey.from_pem(open('sk_{}.pem'.format(myId)).read())
         sk_string = sk.to_string()
 
         self.blockchain = bc
         self.myId = myId
-
+        self.myPubKey = vk
+        self.mySecretKey = sk
 
     def mine_block(self):
         currentBlockchain = self.blockchain         # Note: careful of reference or deepCopy
         currentLastBlock = self.blockchain.last_block
-        otherMiners = list(filter(lambda x: x!=self.myId, MINER_ADDR))          # Filter myId from all Ids      
+        otherMiners = list(filter(lambda x: x!=self.myId, MINER_PORT))          # Filter myId from all Ids      
 
         isVerified = True
         while isVerified:
@@ -83,10 +85,12 @@ class Miner():
                 # Verify 
                 self._validate_with_global_addrBal(list_of_pending_tx,currentBlockchain)
                 # TODO: Create block
+                Transaction.new(self.myPubKey, 'coinbase', 100, self.mySecretKey)
+                list_of_pending_tx.
                 newBlock = Block(time.time(),)
                 currentBlockchain.add()
-                # TODO: Post blockchain to server
-                r = requests.post('http://127.0.0.1:{}/update-blockchain'.format(self.myId), data=)
+                # TODO: Overwrite local blockchain file.
+                # r = requests.post('http://127.0.0.1:{}/update-blockchain'.format(self.myId), data=)
             elif hasFound == False:
                 # update block-to-mine
                 # TODO: Get latest chain-of-blocks
@@ -112,11 +116,7 @@ class Miner():
                 print("Mining stopped")
                 isVerified = False
 
-        '''
-        win
-        '''
 
-        currentLastBlock["nonce"] = newNonce
         # HTTP GET transactions
         r = requests.get('http://127.0.0.1:{}/get-transactions'.format(self.myId))
         msg = r.json()
@@ -175,14 +175,16 @@ class Miner():
         return final_list
 
     # 3. Introduce random transactions, such that miners (with coins) sends transactions to other miners.
-    # TODO: Get miners public address
     # TODO: Fix POST transaction
     def share_coins_to_drive_economy(self):
-        otherMiners = list(filter(lambda x: x!=self.myId, MINER_ADDR))          # Filter myId from all Ids      
+        otherMiners = list(filter(lambda x: x!=self.myId, MINER_PORT))          # Filter myId from all Ids      
         random.seed()
         luckyMiner = random.choice(otherMiners)
+        luckyMiner_pubkey = MINER_PUBKEY[str(luckyMiner)]
         amt = random.randint(0, 100)
-        r = requests.post('http://127.0.0.1:{}/create-transaction'.format(luckyMiner))
+        newTx = Transaction.new(luckyMiner_pubkey, self.myPubKey, amt, self.mySecretKey)
+        newTxJSON = newTx.to_json()
+        r = requests.post('http://127.0.0.1:{}/create-transaction'.format(luckyMiner),data=newTxJSON)
         
         requests.post('http://127.0.0.1:{}/create-transaction'.format(myId), headers={'Content-type': 'application/json'})
         pass

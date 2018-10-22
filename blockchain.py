@@ -38,9 +38,9 @@ class Blockchain:
     def last_block(self):
         return self.chain[-1]
 
-    def add(self, block, proof, fork, position):
+    def add(self, block, proof, toFork, position):
         print("Adding")
-        if "Yes" in fork:
+        if "Yes" in toFork:
             if self.resolve()[-position]:
                 previous_hash = self.resolve()[-position].getHeaderInHash()
                 self.second_chain = self.resolve()[:-position+1]
@@ -60,7 +60,7 @@ class Blockchain:
                 print("Invalid Block")
                 return False
 
-        elif "No" in fork and self.resolve(): 
+        elif "No" in toFork and self.resolve(): 
             previous_hash = self.last_block.getHeaderInHash()
             print("Prev: " + previous_hash)
             print("Current: " + str(block.header["prevHeaderHash"]))

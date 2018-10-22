@@ -43,6 +43,7 @@ class Transaction():
     
     myTxObj = cls(rcv, snd, amt, cmmt)
     sig = myTxObj.sign(private_key_str)
+    sig = sig.decode("utf-8", "ignore")    # See doc https://docs.python.org/3.3/howto/unicode.html#the-string-type
     myTxObj.signature = sig
     return myTxObj
 
