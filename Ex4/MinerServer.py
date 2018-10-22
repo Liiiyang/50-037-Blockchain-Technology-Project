@@ -30,10 +30,8 @@ args = parser.parse_args()
 #     resp.headers['Link'] = 'http://luisrei.com'
 #     return resp
 
-# curl -H "Content-type: application/json" -X POST http://127.0.0.1:5000/create-transaction -d '{"sender":"1","receiver":"4s","amount":"45"}'
-
-# requests.post('http://127.0.0.1:{}/create-transaction'.format(myId), data= ,headers={'Content-type': 'text/plain'})
-# TODO: Transaction can be sent as a string or python object
+# requests.post('http://127.0.0.1:{}/create-transaction'.format(myId), json=myTxJSON ,headers=headers)
+# TODO: Done. Transaction can be sent as a string or python object
 @app.route('/create-transaction', methods=['POST'])
 def create_transaction():
     # Read JSON file
@@ -71,15 +69,21 @@ def create_transaction():
     return jsonify(response), 201
     # return newData, 201
 
-# # TODO: Read from pending_transactions.JSON file
-# @app.route('/read-transactions', methods=['GET'])
-# def read_transactions():
-#     for File in os.listdir("."):
-#         if File.endswith(".json"):
-#             with open('test_tx.json') as f:
-#                 data = json.load(f)
-#     # TODO: delete
-# 	return
+
+# TODO: Read from pending_transactions.JSON file
+# requests.get('http://127.0.0.1:{}/read-transaction'.format(myId))
+@app.route('/read-transactions', methods=['GET'])
+def read_transactions():
+    for File in os.listdir("."):
+        if File.endswith(".json"):
+            with open('pending_transactions.json') as f:
+                data = json.load(f)
+    resp = data
+    # TODO: delete
+    # data["AllTransactions"] = []
+    # with open('pending_transactions.json', 'w') as outfile:
+    #     json.dump(data, outfile)
+    return jsonify(resp)
 
 # Deprecated
 # @app.route('/get-header', methods = ['GET'])
