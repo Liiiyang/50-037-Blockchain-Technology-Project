@@ -11,6 +11,7 @@ import hashlib
 import os
 import pickle
 from argparse import ArgumentParser  
+from blockchain import Blockchain
 
 UPLOAD_DIRECTORY = 'C:/Users/Li Yang/source/repos/BlockchainTechnology50037/BlockchainTechnology50037'  
 app = Flask(__name__) 
@@ -98,10 +99,10 @@ def read_blockchain():
 # TODO: Read block header
 @app.route('/read-block-header', methods=['GET'])
 def read_block_header():
-    with open('./{}/blockchain'.format(args.port)) as f:
+    with open('./{}/blockchain'.format(args.port), 'rb') as f:
         bc = pickle.load(f)
-        # print(bc)
-        # pickle.dump(newBlockchain, f)
+        print(bc)
+        # for b in bc.chain:
     return "ready"
 
 # Deprecated

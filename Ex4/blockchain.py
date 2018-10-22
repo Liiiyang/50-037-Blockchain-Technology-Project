@@ -38,6 +38,9 @@ class Blockchain:
     def last_block(self):
         return self.chain[-1]
 
+    # def newAdd(self, block, nonce, toFork, position):
+    #     # TODO: Use nonce properly
+
     def add(self, block, proof, toFork, position):
         print("Adding")
         if "Yes" in toFork:
