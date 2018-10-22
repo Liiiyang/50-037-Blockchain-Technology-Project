@@ -45,8 +45,8 @@ def create_transaction():
 	# Read request data
     if request.headers['Content-Type'] == 'text/plain':
 	    myTx = request.data
-    # elif request.headers['Content-Type'] == 'application/json':
-        # newData = request.get_json()
+    elif request.headers['Content-Type'] == 'application/json':
+        myTx = request.get_json()
         # newData = request.json
         # newData = json.dumps(newData)
         # print(newData)
@@ -56,7 +56,7 @@ def create_transaction():
         # 	"amount": newData["amount"],
         # }
         # myTx = Transaction.new(newData["sender"], newData["receiver"], newData["amount"], newData["privateKey"])
-    # print(myTx)
+    print(myTx)
     data["AllTransactions"].append(myTx)
 
     # Write JSON file

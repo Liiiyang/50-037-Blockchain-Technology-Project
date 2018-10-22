@@ -20,9 +20,9 @@ myTx = Transaction.new(rcv, snd, amt, sk_string)
 myTxJSON = myTx.to_json()
 print(myTxJSON)
 
-testJson = "{'test':'something'}"
-testObj = {'test': 'something'}
+# testJson = "{'test':'something'}"
+# testObj = {'test': 'something'}
 myId = 5000
-headers = {'Content-type': 'text/plain'}
-# headers = {'Content-type': 'application/json'} 
+# headers = {'Content-type': 'text/plain'}
+headers = {'Content-type': 'application/json'} 
 requests.post('http://127.0.0.1:{}/create-transaction'.format(myId), data=myTxJSON ,headers=headers)
