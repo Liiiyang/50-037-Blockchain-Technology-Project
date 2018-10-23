@@ -119,8 +119,9 @@ class Miner():
                 cTx = cTx.to_json()
                 # list_of_pending_tx.append(cTx)
                 # newBlock = Block(time.time(), prevHeaderHash, newNonce, list_of_pending_tx)
-                list_of_pending_tx.append(cTx)
-                newBlock = Block(time.time(), prevHeaderHash, newNonce, list_of_pending_tx)
+                # list_of_pending_tx.append(cTx)
+                r_ls.append(cTx)
+                newBlock = Block(time.time(), prevHeaderHash, newNonce, r_ls)
                 currentBlockchain.newAdd(newBlock, newNonce)
                 self._update_blockchain(currentBlockchain)
             elif hasFound == False:
@@ -188,10 +189,12 @@ class Miner():
             current_addrBal[rcv] += tx["amount"]
         # init global addrBal
         global_addrBal = {}
-        for block in blockchain.chain:
+        for block in blockchain.chain[1:]:
             for tx in block.transactions:
+                print(tx)
+                tx = Transaction.from_json(tx)
                 snd = tx["sender"]
-                rcv = tx["rcv"]
+                rcv = tx["receiver"]
                 if snd not in global_addrBal:
                     global_addrBal[snd] = 0
                 if rcv not in global_addrBal:
@@ -205,7 +208,7 @@ class Miner():
                 if (global_addrBal[addr] - current_addrBal[addr]) < 0:
                     # not enough coinsss
                     for tx in list_of_transactions:
-                        if tx.sender == addr:
+                        if tx["sender"] == addr:
                             # reverse spender's transactions
                             # refund address balance
                             blacklist.append(addr)
@@ -215,7 +218,7 @@ class Miner():
                     # enough coinsss
                     pass
         # filter            
-        final_list = list(filter(lambda x: x.sender not in blacklist, list_of_transactions))
+        final_list = list(filter(lambda x: x["sender"] not in blacklist, list_of_transactions))
         return final_list, True
 
     # 3. Introduce random transactions, such that miners (with coins) sends transactions to other miners.

@@ -1,6 +1,6 @@
 from block import *
 import random
-# import transaction
+from Transaction import *
 import json
 import time
 import requests # A bit clunky OOP?
@@ -19,7 +19,7 @@ class Blockchain:
 
     @classmethod
     def new(cls):
-        genesis_block = Block(time.time(),0,10,['0','0'])
+        genesis_block = Block(time.time(),0,10,['9', '9']) 
         myGenesisBlockHeaderHash = genesis_block.getHeaderInHash()
         bc = cls()
         bc.chain.append(genesis_block)
