@@ -12,6 +12,7 @@ import os
 import pickle
 from argparse import ArgumentParser  
 from blockchain import Blockchain
+from Transaction import Transaction
 
 UPLOAD_DIRECTORY = 'C:/Users/Li Yang/source/repos/BlockchainTechnology50037/BlockchainTechnology50037'  
 app = Flask(__name__) 
@@ -58,7 +59,9 @@ def create_transaction():
         # 	"amount": newData["amount"],
         # }
         # myTx = Transaction.new(newData["sender"], newData["receiver"], newData["amount"], newData["privateKey"])
-    print(myTx)
+    # print(type(myTx))
+    # txObj = Transaction.from_json(myTx)
+    # print(type(txObj))
     data["AllTransactions"].append(myTx)
 
     # Write JSON file
@@ -75,13 +78,11 @@ def create_transaction():
 
 
 # TODO: Read from pending_transactions.JSON file
-# requests.get('http://127.0.0.1:{}/read-transaction'.format(myId))
+# requests.get('http://127.0.0.1:{}/read-transactions'.format(myId))
 @app.route('/read-transactions', methods=['GET'])
 def read_transactions():
-    for File in os.listdir("."):
-        if File.endswith(".json"):
-            with open('pending_transactions.json') as f:
-                data = json.load(f)
+    with open('./pending_transactions.json') as f:
+        data = json.load(f)
     resp = data
     # TODO: delete
     # data["AllTransactions"] = []

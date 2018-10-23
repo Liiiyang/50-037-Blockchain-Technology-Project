@@ -30,6 +30,7 @@ import pickle
 from blockchain import *
 from block import Block
 import time
+from collections import namedtuple
 
 MINER_PORT = [5000, 5010, 5020, 5030, 5040]
 MINER_PORT = [5000, 5010]
@@ -49,7 +50,7 @@ class Miner():
             if r.status_code != 202:
                 foundBlockchain = True
                 bc = pickle.loads(r.content)
-                f = open('./{}/blockchain'.format(myId),'wb')
+                f = open('./{}/blockchain'.format(myId),'wb')       # Redundant code: consider using _update_blockchain instead
                 pickle.dump(bc,f)
                 f.close()
                 break
@@ -89,8 +90,14 @@ class Miner():
             if hasFound == True:
                 # make new block
                 # HTTP GET all transactions
+                print("success")
                 r = requests.get('http://127.0.0.1:{}/read-transactions'.format(self.myId))
-                list_of_pending_tx = json.loads(r.json, object_hook=lambda d: namedtuple('X', d.keys())(*d.values()))
+                r_ls = Transaction.from_json(r.text)["AllTransactions"]
+                list_of_pending_tx = []
+                for r_tx in r_ls:
+                    tx = Transaction.from_json(r_tx)
+                    list_of_pending_tx.append(tx)
+                print(list_of_pending_tx)
                 # Verify 
                 self._validate_with_global_addrBal(list_of_pending_tx,currentBlockchain)
                 # TODO: Create block
@@ -130,17 +137,6 @@ class Miner():
                 isVerified = False
 
 
-        # HTTP GET transactions
-        r = requests.get('http://127.0.0.1:{}/get-transactions'.format(self.myId))
-        msg = r.json()
-        list_of_transactions = msg["Transactions"]
-
-        # Add Reward
-        newBlock = Block(time.time(), currentLastBlock.getHeaderInHash(), '', list_of_transactions)
-
-        self.list_of_previous_balances = blockchain.latest_block.balance
-
-
     def _verify_block(self, block, previousBlock):
         validate = False
         # Check coinbase transaction
@@ -160,14 +156,22 @@ class Miner():
     def _validate_with_global_addrBal(self, list_of_transactions, blockchain):
         current_addrBal = {}
         for tx in list_of_transactions:
-            current_addrBal[tx.sender] -= tx.amount
-            current_addrBal[tx.receiver] += tx.amount
+            # TODO: Add keys to dictionary
+            snd = tx["sender"]
+            rcv = tx["receiver"]
+            current_addrBal[snd] = 0
+            current_addrBal[rcv] = 0
+        for tx in list_of_transactions:
+            snd = tx["sender"]
+            rcv = tx["receiver"]
+            current_addrBal[snd] -= tx["amount"]
+            current_addrBal[rcv] += tx["amount"]
         # init global addrBal
         global_addrBal = {}
-        for block in blockchain:
+        for block in blockchain.chain:
             for tx in block.transaction_list:
-                global_addrBal[tx.sender] -= tx.amount
-                global_addrBal[tx.receiver] += tx.amount
+                global_addrBal[tx["sender"]] -= tx.amount
+                global_addrBal[tx["receiver"]] += tx.amount
         blacklist = []
         for addr in current_addrBal:
             if current_addrBal[addr] < 0:
@@ -178,8 +182,8 @@ class Miner():
                             # reverse spender's transactions
                             # refund address balance
                             blacklist.append(addr)
-                            current_addrBal[tx.sender] += tx.amount
-                            current_addrBal[tx.receiver] -= tx.amount
+                            current_addrBal[tx["sender"]] += tx.amount
+                            current_addrBal[tx["receiver"]] -= tx.amount
                 else:
                     # enough coinsss
                     pass

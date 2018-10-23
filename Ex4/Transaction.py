@@ -43,7 +43,7 @@ class Transaction():
     
     myTxObj = cls(rcv, snd, amt, cmmt)
     sig = myTxObj.sign(private_key_str)
-    sig = sig.decode("utf-8", "ignore")    # See doc https://docs.python.org/3.3/howto/unicode.html#the-string-type
+    sig = sig.decode("utf-8", "replace")    # See doc https://docs.python.org/3.3/howto/unicode.html#the-string-type
     # myTxObj.signature = sig
     return myTxObj
 
@@ -54,7 +54,7 @@ class Transaction():
   @classmethod
   def from_json(cls, jsonString):
     # Instantiates/Deserializes object from JSON string
-    x = json.loads(jsonString, object_hook=lambda d: namedtuple('X', d.keys())(*d.values()))
+    x = json.loads(jsonString)
     return x
 
   # private method

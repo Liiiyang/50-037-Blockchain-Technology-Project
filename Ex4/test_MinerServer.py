@@ -11,13 +11,15 @@ import sys
 # open("sk.pem","wb").write(sk.to_pem())
 # open("vk.pem","wb").write(vk.to_pem())
 
+myId = 5000
+
 '''
 Test if create-transaction can be saved in json file
 '''
 
-vk = VerifyingKey.from_pem(open("vk.pem").read())
-sk = SigningKey.from_pem(open("sk.pem").read())
 
+vk = VerifyingKey.from_pem(open("./{}/vk.pem".format(myId)).read())
+sk = SigningKey.from_pem(open("./{}/sk.pem".format(myId)).read())
 rcv = 'Bob'
 snd = 'Alice'
 amt = 1
@@ -30,20 +32,24 @@ myTx = Transaction.new(rcv, snd, amt, sk_string)
 myTxJSON = myTx.to_json()
 # print(myTxJSON)
 
-myId = 5010
 # headers = {'Content-type': 'text/plain'}
 headers = {'Content-type': 'application/json'} 
-# requests.post('http://127.0.0.1:{}/create-transaction'.format(myId), json=myTxJSON ,headers=headers)
+# requests.post('http://127.0.0.1:{}/create-transactions'.format(myId), json=myTxJSON ,headers=headers)
+r = requests.get('http://127.0.0.1:{}/read-transactions'.format(myId))
+# print(r.content)
+r1 = Transaction.from_json(r.text)["AllTransactions"]
+r2 = Transaction.from_json(r1[1])
+print(r2["sender"])
 
-'''
-Test Read blockchain
-'''
-f = requests.get('http://127.0.0.1:{}/read-blockchain'.format(myId))
-if f.status_code == 202 :
-    print("blockchain unavaiable")
-else:
-    myBlockchain = pickle.loads(f.content)
-    print(myBlockchain)
+# '''
+# Test Read blockchain
+# '''
+# f = requests.get('http://127.0.0.1:{}/read-blockchain'.format(myId))
+# if f.status_code == 202 :
+#     print("blockchain unavaiable")
+# else:
+#     myBlockchain = pickle.loads(f.content)
+#     print(myBlockchain)
 
 
 # '''

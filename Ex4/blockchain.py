@@ -9,7 +9,7 @@ class Blockchain:
 
     difficulty = 2
     TARGET = '000ffffff'
-    LISTEN_RATE = 5             # Higher number => Slower rate
+    LISTEN_RATE = 100             # Higher number => Slower rate
 
     def __init__(self):
         self.chain =[]
