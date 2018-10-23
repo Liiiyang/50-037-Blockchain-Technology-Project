@@ -21,7 +21,7 @@ args = parser.parse_args()
 
 # requests.post('http://127.0.0.1:{}/create-transaction'.format(myId), json=myTxJSON ,headers=headers)
 # TODO: Done. Transaction can be sent as a string or python object
-@app.route('/create-transaction', methods=['POST'])
+@app.route('/create-transactions', methods=['POST'])
 def create_transaction():
     # Read JSON file
     for File in os.listdir("."):

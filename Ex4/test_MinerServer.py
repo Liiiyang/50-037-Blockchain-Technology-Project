@@ -34,7 +34,7 @@ myTxJSON = myTx.to_json()
 
 # headers = {'Content-type': 'text/plain'}
 headers = {'Content-type': 'application/json'} 
-# requests.post('http://127.0.0.1:{}/create-transactions'.format(myId), json=myTxJSON ,headers=headers)
+requests.post('http://127.0.0.1:{}/create-transactions'.format(myId), json=myTxJSON ,headers=headers)
 r = requests.get('http://127.0.0.1:{}/read-transactions'.format(myId))
 # print(r.content)
 r1 = Transaction.from_json(r.text)["AllTransactions"]

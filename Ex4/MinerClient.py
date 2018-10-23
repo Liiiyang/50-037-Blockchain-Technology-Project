@@ -98,16 +98,21 @@ class Miner():
                 r_ls = Transaction.from_json(r.text)["AllTransactions"]
                 
                 list_of_pending_tx = []
+                list_of_pending_txObj = []
                 for r_tx in r_ls:
-                    print(type(r_tx))
-                    # tx = Transaction.from_json(r_tx)
-                    tx = json.dumps(r_tx)
+                    # print(type(r_tx))
+                    tx = Transaction.from_json(r_tx)
+                    # tx = json.dumps(r_tx)
+                    print(type(tx))
                     list_of_pending_tx.append(tx)
+                    list_of_pending_txObj.append(r_tx)
                 # print(list_of_pending_tx)
                 # print(type(r_ls[0]))
                 # print(type(list_of_pending_tx[0]))
+                print(r_ls)
                 # TODO: Verify 
                 # self._validate_with_global_addrBal(list_of_pending_tx, currentBlockchain)
+                self._validate_with_global_addrBal(list_of_pending_tx, currentBlockchain)
                 # TODO: Create block
                 # cTx = Transaction.new(self.myPubKey, 'coinbase', 100, self.mySecretKey)
                 cTx = Transaction.new(str(self.myId), 'coinbase', 100, self.mySecretKey)
@@ -117,7 +122,6 @@ class Miner():
                 list_of_pending_tx.append(cTx)
                 newBlock = Block(time.time(), prevHeaderHash, newNonce, list_of_pending_tx)
                 currentBlockchain.newAdd(newBlock, newNonce)
-                # TODO: Overwrite local blockchain file.
                 self._update_blockchain(currentBlockchain)
             elif hasFound == False:
                 # update block-to-mine
@@ -146,44 +150,6 @@ class Miner():
                     if newBlock.header['prevHeaderHash'] != prevBlock.getHeaderInHash():
                         isVerified = False
                         break
-                    
-                    # OH MY 2:
-                    # prevBlock = list_of_newBlocks[depth-1-i]                 # [41]
-                    # if (i == 0):
-                    #     if currentLastBlock.header['prevHeaderHash'] != prevBlock.header['prevHeaderHash']:
-                    #         # Current last block does not match with link block
-                    #         print("Verification failed")
-                    #         isVerified = False
-                    #         break
-                    #     else
-                    # newBlock = list_of_newBlocks[depth-1-i-1]      # [42]
-                    # if newBlock.header['prevHeaderHash'] == prevBlock.getHeaderInHash():
-                        
-                    # else:
-                    #     print("Verification failed")
-                    #     isVerified = False
-                    #     break
-
-                    # OH MY 1:
-                    # newBlock = list_of_newBlocks[i]                 # [43]
-                    # if (i == depth-1 and ):
-                    #     # TODO: Update current blockchain
-                    #     currentLastBlock = list_of_newBlocks[depth-1]
-                    #     currentBlockchain.chain.pop()
-                        
-                    #     currentBlockchain.append(list_of_newBlocks)
-                    #     self._update_blockchain
-                    #     break
-                    # prevBlock = list_of_newBlocks[depth-1-i-1]      # [42]
-                    # print("prevBlock header: " + prevBlock.getHeaderInHash())
-                    # if newBlock.header['prevHeaderHash'] != prevBlock.getHeaderInHash():
-                    #     # If hashes not chained, then verification failed
-                    #     print("Verification failed")
-                    #     isVerified = False
-                    #     break
-
-
-                # Ref: http://docs.python-requests.org/en/master/user/quickstart/#passing-parameters-in-urls
             else:
                 print("Mining stopped")
                 isVerified = False
@@ -209,7 +175,9 @@ class Miner():
         # if len(blockchain.chain) < 5:
             # TODO: Control validation up to certain depth
         current_addrBal = {}
+        print(len(list_of_transactions))
         for tx in list_of_transactions:
+            print(type(tx))
             snd = tx["sender"]
             rcv = tx["receiver"]
             if snd not in current_addrBal:
