@@ -8,8 +8,8 @@ import requests # A bit clunky OOP?
 class Blockchain:
 
     difficulty = 2
-    TARGET = '000ffffff'
-    LISTEN_RATE = 100             # Higher number => Slower rate
+    TARGET = '00000ffff'
+    LISTEN_RATE = 10000             # Higher number => Slower rate
 
     def __init__(self):
         self.chain =[]
@@ -64,16 +64,17 @@ class Blockchain:
         print("Working..")
         random.seed()
         found = False
-        foundNonce = ''
+        foundNonce = 0
         listenCounter = Blockchain.LISTEN_RATE
         while (found != True):
             # Mining
             # print("Finding..")
             foundNonce = random.randrange(2**256)
-            block.header["nonce"] = foundNonce          # TODO: Check if this needs to be a string
+            block.header["nonce"] = foundNonce
             blockHeaderHashWithNewNonce = block.getHeaderInHash()
             listenCounter -= 1
-            if (blockHeaderHashWithNewNonce < Blockchain.TARGET) and blockHeaderHashWithNewNonce.startswith('0' * Blockchain.difficulty):
+            if (blockHeaderHashWithNewNonce < Blockchain.TARGET) and \
+                blockHeaderHashWithNewNonce.startswith('0' * Blockchain.difficulty):
                 print("Block: " + str(blockHeaderHashWithNewNonce))
                 print("Found!")
                 found = True
@@ -87,7 +88,9 @@ class Blockchain:
                     for minerId in list_of_otherMiners:
                         # TODO: do this!
                         r = requests.get('http://127.0.0.1:{}/read-blockchain-height'.format(minerId))
-                        if int(r.content) > myHeight:
+                        msg = r.json()
+                        print(msg)
+                        if int(msg) > myHeight:
                             return (False, 0, '', minerId)
                 listenCounter = Blockchain.LISTEN_RATE
 

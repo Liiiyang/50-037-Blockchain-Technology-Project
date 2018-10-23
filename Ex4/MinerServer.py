@@ -145,7 +145,9 @@ def read_blockchain_length():
     # bc = pickle.load(f)
     # f.close()
     height = len(bc.chain)
-    return jsonify(height)
+    # jHeight = jsonify(height)
+    jHeight = json.dumps(height)
+    return Response(jHeight)
 
 
 
@@ -163,7 +165,9 @@ def read_blocks_from_winner():
     height = len(bc.chain)
     for i in range(height):
         b = bc.chain[height - 1 - i]
-        list_of_blocks.append(b)
+        # list_of_blocks.append(b)            # [43, 42, 41]
+        list_of_blocks = [b] + list_of_blocks
+        # list_of_blocks = [b] + list_of_blocks
         if b.header['prevHeaderHash'] == blockHeaderHash:
             break
     resp = pickle.dumps(list_of_blocks)

@@ -51,15 +51,15 @@ class Miner():
             if r.status_code != 202:
                 foundBlockchain = True
                 bc = pickle.loads(r.content)
-                f = open('./{}/blockchain'.format(myId),'wb')       # Redundant code: consider using _update_blockchain instead
-                pickle.dump(bc,f)
-                f.close()
+                with open('./{}/blockchain'.format(myId), 'wb') as f:
+                    pickle.dump(bc,f)
+                # f = open('./{}/blockchain'.format(myId),'wb')       # Redundant code: consider using _update_blockchain instead
+                # f.close()
                 break
         if foundBlockchain == False:
             bc = Blockchain.new()
-            f = open('./{}/blockchain'.format(myId),'wb')
-            pickle.dump(bc,f)
-            f.close()
+            with open('./{}/blockchain'.format(myId), 'wb') as f:
+                pickle.dump(bc,f)
             # Current Miner writes local. Other Miners read through network
             # r = requests.post('http://127.0.0.1:{}/update-blockchain'.format(myId), data=bc, headers={'Content-Type': 'application/octet-stream'})
 
@@ -120,7 +120,6 @@ class Miner():
                 # TODO: Overwrite local blockchain file.
                 self._update_blockchain(currentBlockchain)
             elif hasFound == False:
-                print("Check")
                 # update block-to-mine
                 # TODO: Get latest chain-of-blocks
                 currentLastBlockHeader = currentLastBlock.header['prevHeaderHash']
@@ -130,22 +129,59 @@ class Miner():
                 # TODO: Verify list_of_blocks with current miner's blockchain
                 depth = len(list_of_newBlocks)
                 for i in range(depth):
-                    newBlock = list_of_newBlocks[depth-1-i]
-                    print("newBlock header: " + newBlock.header['prevHeaderHash'])
-                    prevBlock = list_of_newBlocks[depth-1-i-1]
-                    print("prevBlock header: " + prevBlock.header['prevHeaderHash'])
+                    if i == (depth-1):
+                        # print("YUPPPP")
+                        resBlockchain = currentBlockchain.chain[:-1]
+                        currentBlockchain.chain = resBlockchain + list_of_newBlocks
+                        self._update_blockchain(currentBlockchain)
+                        continue
+                    prevBlock = list_of_newBlocks[i]
+                    newBlock = list_of_newBlocks[i+1]      # [42]
+                    if i == 0:
+                        if currentLastBlock.header['prevHeaderHash'] != prevBlock.header['prevHeaderHash']:
+                            # Current last block does not match with link block
+                            print("Verification failed")
+                            isVerified = False
+                            break
                     if newBlock.header['prevHeaderHash'] != prevBlock.getHeaderInHash():
-                        # If hashes not chained, then verification failed
-                        print("Verification failed")
                         isVerified = False
                         break
-                    if i == depth-1:
-                        # TODO: Update current blockchain
-                        currentLastBlock = list_of_newBlocks[depth-1]
-                        currentBlockchain.pop()
-                        currentBlockchain.append(list_of_newBlocks)
-                        self._update_blockchain
-                        break
+                    
+                    # OH MY 2:
+                    # prevBlock = list_of_newBlocks[depth-1-i]                 # [41]
+                    # if (i == 0):
+                    #     if currentLastBlock.header['prevHeaderHash'] != prevBlock.header['prevHeaderHash']:
+                    #         # Current last block does not match with link block
+                    #         print("Verification failed")
+                    #         isVerified = False
+                    #         break
+                    #     else
+                    # newBlock = list_of_newBlocks[depth-1-i-1]      # [42]
+                    # if newBlock.header['prevHeaderHash'] == prevBlock.getHeaderInHash():
+                        
+                    # else:
+                    #     print("Verification failed")
+                    #     isVerified = False
+                    #     break
+
+                    # OH MY 1:
+                    # newBlock = list_of_newBlocks[i]                 # [43]
+                    # if (i == depth-1 and ):
+                    #     # TODO: Update current blockchain
+                    #     currentLastBlock = list_of_newBlocks[depth-1]
+                    #     currentBlockchain.chain.pop()
+                        
+                    #     currentBlockchain.append(list_of_newBlocks)
+                    #     self._update_blockchain
+                    #     break
+                    # prevBlock = list_of_newBlocks[depth-1-i-1]      # [42]
+                    # print("prevBlock header: " + prevBlock.getHeaderInHash())
+                    # if newBlock.header['prevHeaderHash'] != prevBlock.getHeaderInHash():
+                    #     # If hashes not chained, then verification failed
+                    #     print("Verification failed")
+                    #     isVerified = False
+                    #     break
+
 
                 # Ref: http://docs.python-requests.org/en/master/user/quickstart/#passing-parameters-in-urls
             else:
