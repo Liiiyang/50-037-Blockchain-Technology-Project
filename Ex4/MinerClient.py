@@ -103,18 +103,13 @@ class Miner():
                     tx = Transaction.from_json(r_tx)
                     # tx = json.dumps(r_tx)
                     # print(type(tx))
-                    print(r_tx)
+                    # print(r_tx)
                     list_of_pending_tx.append(tx)
                     list_of_pending_txObj.append(r_tx)
-                # print(list_of_pending_tx)
-                # print(type(r_ls[0]))
-                # print(type(list_of_pending_tx[0]))
-                print(r_ls)
+                # print(r_ls)
                 # TODO: Verify 
                 # self._validate_with_global_addrBal(list_of_pending_tx, currentBlockchain)
                 final_list = self._validate_with_global_addrBal(list_of_pending_tx, currentBlockchain)
-                print("Final list: ")
-                print(final_list)
                 final_json_list = []
                 for d in final_list:
                     tx = json.dumps(d)
@@ -133,11 +128,11 @@ class Miner():
                 self.blockchain = currentBlockchain
                 self._update_blockchain(currentBlockchain)
                 currentLastBlock = newBlock
-                if count == 15:
-                    for b in self.blockchain.chain:
-                        print(b.transactions)
-                    print("Debug stop")
-                    isVerified = False
+                # if count == 15:
+                #     for b in self.blockchain.chain:
+                #         print(b.transactions)
+                #     print("Debug stop")
+                #     isVerified = False
             elif hasFound == False:
                 # update block-to-mine
                 # TODO: Get latest chain-of-blocks
@@ -201,7 +196,6 @@ class Miner():
                 current_addrBal[rcv] = 0
             current_addrBal[snd] -= tx["amount"]
             current_addrBal[rcv] += tx["amount"]
-        print(current_addrBal)
         # init global addrBal
         global_addrBal = {}
         # print("length is" + str(len(blockchain.chain)))
@@ -215,7 +209,6 @@ class Miner():
 
         for block in blockchain.chain[BOOTSTRAPPED_HEIGHT+1:]:
             for tx in block.transactions:
-                # print(tx)
                 tx = Transaction.from_json(tx)
                 snd = tx["sender"]
                 rcv = tx["receiver"]
@@ -232,33 +225,25 @@ class Miner():
         for addr in current_addrBal:
             # print(current_addrBal[addr])
             if current_addrBal[addr] < 0:
-                print("It's here")
                 if (current_addrBal[addr] + global_addrBal[addr]) < 0:
-                    print("But not here")
                     # not enough coinsss
                     for tx in list_of_transactions:
                         if tx["sender"] == addr:
-                            print(addr)
                             # reverse spender's transactions
-                            # refund address balance
+                            # refund address balance (redundant)
                             blacklist.append(addr)
                             current_addrBal[tx["sender"]] += tx["amount"]
                             current_addrBal[tx["receiver"]] -= tx["amount"]
                 else:
                     # enough coinsss
                     pass
-        final_list = []
         # filter
-        print("Blacklist: ")
-        print(blacklist)
-        # final_list = list(filter(lambda x: x["sender"] not in blacklist, list_of_transactions))
         result_list = []
         for tx in list_of_transactions:
             if tx["sender"] in blacklist:
                 continue
             else:
                 result_list.append(tx)
-        # print(final_list)
         return result_list
 
     # 3. Introduce random transactions, such that miners (with coins) sends transactions to other miners.
