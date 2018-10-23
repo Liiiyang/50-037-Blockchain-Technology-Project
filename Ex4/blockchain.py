@@ -68,7 +68,7 @@ class Blockchain:
         listenCounter = Blockchain.LISTEN_RATE
         while (found != True):
             # Mining
-            print("Finding..")
+            # print("Finding..")
             foundNonce = random.randrange(2**256)
             block.header["nonce"] = foundNonce          # TODO: Check if this needs to be a string
             blockHeaderHashWithNewNonce = block.getHeaderInHash()

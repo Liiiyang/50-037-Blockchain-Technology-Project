@@ -31,6 +31,7 @@ from blockchain import *
 from block import Block
 import time
 from collections import namedtuple
+import copy
 
 MINER_PORT = [5000, 5010, 5020, 5030, 5040]
 MINER_PORT = [5000, 5010]
@@ -73,14 +74,14 @@ class Miner():
         self.mySecretKey = sk_string
 
     def _update_blockchain(self, newBlockchain):
-        with open('./{}/blockchain'.format(self.myId)) as f:
+        with open('./{}/blockchain'.format(self.myId), 'wb') as f:
             pickle.dump(newBlockchain, f)
 
 
 
     def mine_block(self):
-        currentBlockchain = self.blockchain         # Note: careful of reference or deepCopy
-        currentLastBlock = self.blockchain.last_block
+        currentBlockchain = copy.deepcopy(self.blockchain)         # Note: careful of reference or deepCopy
+        currentLastBlock = copy.deepcopy(self.blockchain.last_block)
         otherMiners = list(filter(lambda x: x!=self.myId, MINER_PORT))          # Filter myId from all Ids      
 
         isVerified = True
@@ -98,20 +99,28 @@ class Miner():
                     tx = Transaction.from_json(r_tx)
                     list_of_pending_tx.append(tx)
                 print(list_of_pending_tx)
-                # Verify 
-                self._validate_with_global_addrBal(list_of_pending_tx,currentBlockchain)
+                print(type(r_ls[0]))
+                print(type(list_of_pending_tx[0]))
+                # TODO: Verify 
+                # self._validate_with_global_addrBal(list_of_pending_tx, currentBlockchain)
                 # TODO: Create block
                 # cTx = Transaction.new(self.myPubKey, 'coinbase', 100, self.mySecretKey)
                 cTx = Transaction.new(str(self.myId), 'coinbase', 100, self.mySecretKey)
-                list_of_pending_tx.append(cTx)
-                newBlock = Block(time.time(), prevHeaderHash, newNonce, list_of_pending_tx)
+                cTx = cTx.to_json()
+                # list_of_pending_tx.append(cTx)
+                # newBlock = Block(time.time(), prevHeaderHash, newNonce, list_of_pending_tx)
+                r_ls.append(cTx)
+                newBlock = Block(time.time(), prevHeaderHash, newNonce, r_ls)
                 currentBlockchain.newAdd(newBlock, newNonce)
                 # TODO: Overwrite local blockchain file.
+                print(type(currentBlockchain))
                 self._update_blockchain(currentBlockchain)
             elif hasFound == False:
                 # update block-to-mine
                 # TODO: Get latest chain-of-blocks
-                payload = { 'header': currentLastBlock['prevHeaderHash'] }
+                print(type(currentLastBlock))
+                currentLastBlockHeader = currentLastBlock.header['prevHeaderHash']
+                payload = { 'header': currentLastBlockHeader }
                 r = requests.get('http://127.0.0.1:{}/read-blocks-from-winner'.format(minerId), params=payload)
                 list_of_newBlocks = pickle.loads(r.content)
                 # TODO: Verify list_of_blocks with current miner's blockchain
@@ -119,7 +128,7 @@ class Miner():
                 for i in range(depth):
                     newBlock = list_of_newBlocks[depth-1-i]
                     prevBlock = list_of_newBlocks[depth-1-i-1]
-                    if newBlock.prevHeaderHash != prevBlock.getHeaderInHash:
+                    if newBlock.header['prevHeaderHash'] != prevBlock.getHeaderInHash:
                         # If hashes not chained, then verification failed
                         print("Verification failed")
                         isVerified = False
@@ -236,9 +245,13 @@ class Miner():
 '''
 Miner Behavior
 '''
+from argparse import ArgumentParser
 
+parser = ArgumentParser()  
+parser.add_argument('-H', '--host', default='127.0.0.1')  
+parser.add_argument('-i', '--id', default=5000, type=int)
+args = parser.parse_args()  
 
-       
-   
-    
-
+if __name__ == "__main__":
+    m = Miner(args.id)
+    m.mine_block()
