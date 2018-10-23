@@ -22,7 +22,7 @@ vk = VerifyingKey.from_pem(open("./{}/vk.pem".format(myId)).read())
 sk = SigningKey.from_pem(open("./{}/sk.pem".format(myId)).read())
 rcv = 'Bob'
 snd = 'Alice'
-amt = 1
+amt = 1000000
 sk_string = sk.to_string()
 # sk_string = (sk.to_string()).hex()
 # codecs.encode(sk_string, 'hex').decode("utf-8")
@@ -35,11 +35,10 @@ myTxJSON = myTx.to_json()
 # headers = {'Content-type': 'text/plain'}
 headers = {'Content-type': 'application/json'} 
 requests.post('http://127.0.0.1:{}/create-transactions'.format(myId), json=myTxJSON ,headers=headers)
-r = requests.get('http://127.0.0.1:{}/read-transactions'.format(myId))
-# print(r.content)
-r1 = Transaction.from_json(r.text)["AllTransactions"]
-r2 = Transaction.from_json(r1[1])
-print(r2["sender"])
+# r = requests.get('http://127.0.0.1:{}/read-transactions'.format(myId))
+# r1 = Transaction.from_json(r.text)["AllTransactions"]
+# r2 = Transaction.from_json(r1[1])
+# print(r2["sender"])
 
 # '''
 # Test Read blockchain

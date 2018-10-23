@@ -8,7 +8,7 @@ Create Blockchain
 c1 = 'Alice'
 c2 = 'Bob'
 c3 = 'Charlie'
-myId = 5000
+myId = 5010
 sk1 = SigningKey.from_pem(open("./1/sk.pem".format(myId)).read())
 # sk2 = SigningKey.from_pem(open("./2/sk.pem".format(myId)).read())
 # sk3 = SigningKey.from_pem(open("./3/sk.pem".format(myId)).read())
@@ -34,9 +34,16 @@ tx5 = tx5.to_json()
 bc = Blockchain.new()
 hasFound, newNonce, prevHeaderHash, minerId = bc.proof_of_work(bc.last_block, [])
 bc.newAdd(Block(time.time(), prevHeaderHash, newNonce, [tx4, tx5]), newNonce)
-# print(bc.chain[1].transactions[0])
 hasFound, newNonce, prevHeaderHash, minerId = bc.proof_of_work(bc.last_block, [])
 bc.newAdd(Block(time.time(), prevHeaderHash, newNonce, [tx1, tx2]), newNonce)
+hasFound, newNonce, prevHeaderHash, minerId = bc.proof_of_work(bc.last_block, [])
+bc.newAdd(Block(time.time(), prevHeaderHash, newNonce, [tx3, tx4]), newNonce)
+hasFound, newNonce, prevHeaderHash, minerId = bc.proof_of_work(bc.last_block, [])
+bc.newAdd(Block(time.time(), prevHeaderHash, newNonce, [tx4, tx5]), newNonce)
+hasFound, newNonce, prevHeaderHash, minerId = bc.proof_of_work(bc.last_block, [])
+bc.newAdd(Block(time.time(), prevHeaderHash, newNonce, [tx3, tx4]), newNonce)
+hasFound, newNonce, prevHeaderHash, minerId = bc.proof_of_work(bc.last_block, [])
+bc.newAdd(Block(time.time(), prevHeaderHash, newNonce, [tx4, tx5]), newNonce)
 hasFound, newNonce, prevHeaderHash, minerId = bc.proof_of_work(bc.last_block, [])
 bc.newAdd(Block(time.time(), prevHeaderHash, newNonce, [tx3, tx4]), newNonce)
 hasFound, newNonce, prevHeaderHash, minerId = bc.proof_of_work(bc.last_block, [])

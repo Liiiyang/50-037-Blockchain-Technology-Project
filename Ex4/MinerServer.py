@@ -69,9 +69,9 @@ def read_transactions():
                 data = json.load(f)
     resp = data
     # TODO: delete
-    # data["AllTransactions"] = []
-    # with open('pending_transactions.json', 'w') as outfile:
-    #     json.dump(data, outfile)
+    data["AllTransactions"] = []
+    with open('pending_transactions.json', 'w') as outfile:
+        json.dump(data, outfile)
     return jsonify(resp)
 
 # f = requests.get('http://127.0.0.1:{}/read-blockchain'.format(myId))
