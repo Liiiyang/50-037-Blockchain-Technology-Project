@@ -93,7 +93,6 @@ class Miner():
             if hasFound == True and count < 100:
                 # make new block
                 # HTTP GET all transactions
-                print("success")
                 r = requests.get('http://127.0.0.1:{}/read-transactions'.format(self.myId))
                 r_ls = Transaction.from_json(r.text)["AllTransactions"]
                 
@@ -104,6 +103,7 @@ class Miner():
                     tx = Transaction.from_json(r_tx)
                     # tx = json.dumps(r_tx)
                     # print(type(tx))
+                    print(r_tx)
                     list_of_pending_tx.append(tx)
                     list_of_pending_txObj.append(r_tx)
                 # print(list_of_pending_tx)
@@ -113,6 +113,8 @@ class Miner():
                 # TODO: Verify 
                 # self._validate_with_global_addrBal(list_of_pending_tx, currentBlockchain)
                 final_list = self._validate_with_global_addrBal(list_of_pending_tx, currentBlockchain)
+                print("Final list: ")
+                print(final_list)
                 final_json_list = []
                 for d in final_list:
                     tx = json.dumps(d)
@@ -128,8 +130,12 @@ class Miner():
                 # newBlock = Block(time.time(), prevHeaderHash, newNonce, r_ls)
                 newBlock = Block(time.time(), prevHeaderHash, newNonce, final_json_list)
                 currentBlockchain.newAdd(newBlock, newNonce)
+                self.blockchain = currentBlockchain
                 self._update_blockchain(currentBlockchain)
-                if count == 20:
+                currentLastBlock = newBlock
+                if count == 15:
+                    for b in self.blockchain.chain:
+                        print(b.transactions)
                     print("Debug stop")
                     isVerified = False
             elif hasFound == False:
@@ -148,6 +154,7 @@ class Miner():
                         currentBlockchain.chain = resBlockchain + list_of_newBlocks
                         self.blockchain = currentBlockchain
                         self._update_blockchain(currentBlockchain)
+                        currentLastBlock = currentBlockchain.last_block
                         continue
                     prevBlock = list_of_newBlocks[i]
                     newBlock = list_of_newBlocks[i+1]      # [42]
@@ -182,8 +189,7 @@ class Miner():
         return validate
 
     def _validate_with_global_addrBal(self, list_of_transactions, blockchain):
-        # if len(blockchain.chain) < 5:
-            # TODO: Control validation up to certain height
+        # TODO: Control validation up to certain height
         BOOTSTRAPPED_HEIGHT = 3
         current_addrBal = {}
         for tx in list_of_transactions:
@@ -195,6 +201,7 @@ class Miner():
                 current_addrBal[rcv] = 0
             current_addrBal[snd] -= tx["amount"]
             current_addrBal[rcv] += tx["amount"]
+        print(current_addrBal)
         # init global addrBal
         global_addrBal = {}
         # print("length is" + str(len(blockchain.chain)))
@@ -208,7 +215,7 @@ class Miner():
 
         for block in blockchain.chain[BOOTSTRAPPED_HEIGHT+1:]:
             for tx in block.transactions:
-                print(tx)
+                # print(tx)
                 tx = Transaction.from_json(tx)
                 snd = tx["sender"]
                 rcv = tx["receiver"]
@@ -218,15 +225,20 @@ class Miner():
                     global_addrBal[rcv] = 0
                 global_addrBal[tx["sender"]] -= tx["amount"]
                 global_addrBal[tx["receiver"]] += tx["amount"]
+        print(global_addrBal)
         blacklist = []
         # TODO: Handle coinbase
         # global_addrBal.pop("coinbase")
         for addr in current_addrBal:
+            # print(current_addrBal[addr])
             if current_addrBal[addr] < 0:
-                if (global_addrBal[addr] - current_addrBal[addr]) < 0:
+                print("It's here")
+                if (current_addrBal[addr] + global_addrBal[addr]) < 0:
+                    print("But not here")
                     # not enough coinsss
                     for tx in list_of_transactions:
                         if tx["sender"] == addr:
+                            print(addr)
                             # reverse spender's transactions
                             # refund address balance
                             blacklist.append(addr)
@@ -237,8 +249,17 @@ class Miner():
                     pass
         final_list = []
         # filter
-        final_list = list(filter(lambda x: x["sender"] not in blacklist, list_of_transactions))
-        return final_list
+        print("Blacklist: ")
+        print(blacklist)
+        # final_list = list(filter(lambda x: x["sender"] not in blacklist, list_of_transactions))
+        result_list = []
+        for tx in list_of_transactions:
+            if tx["sender"] in blacklist:
+                continue
+            else:
+                result_list.append(tx)
+        # print(final_list)
+        return result_list
 
     # 3. Introduce random transactions, such that miners (with coins) sends transactions to other miners.
     # TODO: Fix POST transaction

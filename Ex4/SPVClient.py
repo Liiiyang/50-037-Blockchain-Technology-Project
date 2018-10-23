@@ -46,11 +46,10 @@ class SPVClient():
         self.verifyKey = vk_string
         self.signingKey = sk_string
 
-           
     def getBlockHeader(self, MinerId, depth):
         return requests.get('http://127.0.0.1:{}/read-block-header'.format(MinerId), params={'depth': depth})
-    
-    def sendTransaction(self,MinerId,rcv,snd, amt, cmmt):
+
+    def sendTransaction(self, MinerId, rcv, snd, amt, cmmt):
         new_tx = Transaction.new(rcv, snd, amt, self.signingKey, cmmt)
         tx_string = new_tx.to_json()
         data = {
@@ -80,15 +79,25 @@ if __name__=="__main__":
     if args.id == None:
         print("Please enter the folder id")
     else:
-        print(SPVClient(args.id).sendTransaction(5000,"you", "me", 5000,"First Transaction"))
+        s = SPVClient(args.id)
+        # print(s.sendTransaction(5000,"you", "me", 5000,"First Transaction"))
 
-        msg = SPVClient(args.id).receiveTransactionASndProofs(5000, 1, "5000").content
-        msg = pickle.loads(msg)
-        print(msg)
+        # msg = s.receiveTransactionASndProofs(5000, 1, "5000")
+        # msg = msg.content
+        # msg = pickle.loads(msg)
+        # print(msg)
+        g = requests.get('http://127.0.0.1:{}/read-tx-and-proof'.format(5000), params={'length': 2, 'receiver': 'receiver'})
+        g = pickle.loads(g.content)
+        print(g)
 
-        msg1 = SPVClient(args.id).getBlockHeader(5000,0).content
-        msg1 = pickle.loads(msg1)
-        print(msg1)
+        # f = requests.get('http://127.0.0.1:{}/read-block-header'.format(5000), params={'depth': 1})
+        # f = pickle.loads(f.content)
+        # print(f)
+
+        # msg1 = SPVClient(args.id).getBlockHeader(5000,0).content
+        # msg1 = pickle.loads(msg1)
+        # print(msg1)
+        
 
 
 

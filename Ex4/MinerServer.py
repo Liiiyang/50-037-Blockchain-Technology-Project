@@ -7,6 +7,7 @@ import time
 import hashlib 
 import os
 import pickle
+import copy
 
 UPLOAD_DIRECTORY = 'C:/Users/Li Yang/source/repos/BlockchainTechnology50037/BlockchainTechnology50037'  
 app = Flask(__name__) 
@@ -67,7 +68,7 @@ def read_transactions():
         if File.endswith(".json"):
             with open('pending_transactions.json') as f:
                 data = json.load(f)
-    resp = data
+    resp = copy.deepcopy(data)
     # TODO: delete
     data["AllTransactions"] = []
     with open('pending_transactions.json', 'w') as outfile:
@@ -108,32 +109,41 @@ def read_block_header():
     resp = pickle.dumps(ls)
     return Response(resp)
 
+
+@app.route('/read-transaction-proof', methods=['GET'])
+def read_transaction_proof():
+    with open('./{}/blockchain'.format(args.port), 'rb') as f:
+        bc = pickle.load(f)
+    return Response('okay?')
 @app.route('/read-tx-and-proof', methods = ['GET'])
 def read_tx_proof():
     # Open blockchain file
-    all_my_transactions = []
-    all_my_txProofs = []
-    length = int(request.args['length'])
-    receiver = request.args['receiver']
+    
+    # length = int(request.args['length'])
+    # receiver = request.args['receiver']
     with open('./{}/blockchain'.format(args.port), 'rb') as f:
         bc = pickle.load(f)
-        depthOfBlocks = bc.chain[length:]
-        for currentBlock in depthOfBlocks:
-            print("Tx: " + str(currentBlock.transactions))
-            for tx in currentBlock.transactions:
-                print("tx: " + str(tx))
-                #Or Bob's public key
-                if Transaction.from_json(tx)["receiver"] == receiver: 
-                    all_my_transactions.append(tx)             
-            for myTx in all_my_transactions:
-                txProof = currentBlock.get_merkleProofs(myTx)
-                all_my_txProofs.append(txProof)
-    data = {
-        "Transactions": all_my_transactions,
-        "Proofs": all_my_txProofs
-        }
-    resp = pickle.dumps(data)
-    return Response(resp)
+    all_my_transactions = []
+    all_my_txProofs = []
+    # depthOfBlocks = bc.chain[length:]
+    # for currentBlock in depthOfBlocks:
+    #     print("Tx: " + str(currentBlock.transactions))
+    #     for tx in currentBlock.transactions:
+    #         print("tx: " + str(tx))
+    #         #Or Bob's public key
+    #         if Transaction.from_json(tx)["receiver"] == receiver: 
+    #             all_my_transactions.append(tx)             
+    #     for myTx in all_my_transactions:
+    #         txProof = currentBlock.get_merkleProofs(myTx)
+    #         all_my_txProofs.append(txProof)
+    # data = {
+    #     "Transactions": all_my_transactions,
+    #     "Proofs": all_my_txProofs
+    #     }
+    # print("here")
+    # resp = pickle.dumps(data)
+    # return Response(resp)
+    return Response('test')
 
 # For checking who found a new nonce
 # TODO: Done
