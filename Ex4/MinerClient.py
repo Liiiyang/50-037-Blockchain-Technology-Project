@@ -101,7 +101,8 @@ class Miner():
                 # Verify 
                 self._validate_with_global_addrBal(list_of_pending_tx,currentBlockchain)
                 # TODO: Create block
-                cTx = Transaction.new(self.myPubKey, 'coinbase', 100, self.mySecretKey)
+                # cTx = Transaction.new(self.myPubKey, 'coinbase', 100, self.mySecretKey)
+                cTx = Transaction.new(str(self.myId), 'coinbase', 100, self.mySecretKey)
                 list_of_pending_tx.append(cTx)
                 newBlock = Block(time.time(), prevHeaderHash, newNonce, list_of_pending_tx)
                 currentBlockchain.newAdd(newBlock, newNonce)
@@ -154,25 +155,32 @@ class Miner():
         return validate
 
     def _validate_with_global_addrBal(self, list_of_transactions, blockchain):
+        # if len(blockchain.chain) < 5:
+            # TODO: Control validation up to certain depth
         current_addrBal = {}
         for tx in list_of_transactions:
-            # TODO: Add keys to dictionary
             snd = tx["sender"]
             rcv = tx["receiver"]
-            current_addrBal[snd] = 0
-            current_addrBal[rcv] = 0
-        for tx in list_of_transactions:
-            snd = tx["sender"]
-            rcv = tx["receiver"]
+            if snd not in current_addrBal:
+                current_addrBal[snd] = 0
+            if rcv not in current_addrBal:
+                current_addrBal[rcv] = 0
             current_addrBal[snd] -= tx["amount"]
             current_addrBal[rcv] += tx["amount"]
         # init global addrBal
         global_addrBal = {}
         for block in blockchain.chain:
-            for tx in block.transaction_list:
-                global_addrBal[tx["sender"]] -= tx.amount
-                global_addrBal[tx["receiver"]] += tx.amount
+            for tx in block.transactions:
+                snd = tx["sender"]
+                rcv = tx["rcv"]
+                if snd not in global_addrBal:
+                    global_addrBal[snd] = 0
+                if rcv not in global_addrBal:
+                    global_addrBal[rcv] = 0
+                global_addrBal[tx["sender"]] -= tx["amount"]
+                global_addrBal[tx["receiver"]] += tx["amount"]
         blacklist = []
+        # TODO: Handle coinbase
         for addr in current_addrBal:
             if current_addrBal[addr] < 0:
                 if (global_addrBal[addr] - current_addrBal[addr]) < 0:
@@ -182,14 +190,14 @@ class Miner():
                             # reverse spender's transactions
                             # refund address balance
                             blacklist.append(addr)
-                            current_addrBal[tx["sender"]] += tx.amount
-                            current_addrBal[tx["receiver"]] -= tx.amount
+                            current_addrBal[tx["sender"]] += tx["amount"]
+                            current_addrBal[tx["receiver"]] -= tx["amount"]
                 else:
                     # enough coinsss
                     pass
         # filter            
         final_list = list(filter(lambda x: x.sender not in blacklist, list_of_transactions))
-        return final_list
+        return final_list, True
 
     # 3. Introduce random transactions, such that miners (with coins) sends transactions to other miners.
     # TODO: Fix POST transaction
