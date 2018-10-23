@@ -21,6 +21,9 @@ parser.add_argument('-H', '--host', default='127.0.0.1')
 parser.add_argument('-p', '--port', default=5000, type=int)
 args = parser.parse_args()  
 
+# Example command:
+# python3 MinerServer.py -p 5000
+
 # @app.route('/create-transaction', methods = ['GET'])
 # def get_transaction():
 #     data = {
@@ -92,8 +95,17 @@ def read_transactions():
 # TODO: Done
 @app.route('/read-blockchain', methods=['GET'])
 def read_blockchain():
-    return send_from_directory('./{}'.format(args.port),'blockchain')
-
+    path = './{}'.format(args.port)
+    if os.path.getsize(path+'/blockchain') == 0:
+        return '', 202
+    else:
+        return send_from_directory(path,'blockchain')
+    # for File in os.listdir("./{}".format(args.port)):
+    #     print(File)
+    #     if File == "blockchain":
+    #         return send_from_directory('./{}'.format(args.port),'blockchain')
+    #     else:
+    #         return '', 202
 
 # For SPVClients
 # f = requests.get('http://127.0.0.1:{}/read-block-header'.format(myId), params={'depth': 1})
@@ -108,6 +120,41 @@ def read_block_header():
     for b in bc.chain[height-depth:]:
         ls.append(b.header)
     return jsonify(ls)
+
+
+# For checking who found a new nonce
+# TODO: Done
+@app.route('/read-blockchain-height', methods=['GET'])
+def read_blockchain_length():
+    with open('./{}/blockchain'.format(args.port), 'rb') as f:
+        bc = pickle.load(f)
+    # f = open('./{}/blockchain'.format(args.port), 'rb').read()
+    # bc = pickle.load(f)
+    # f.close()
+    height = len(bc.chain)
+    return jsonify(height)
+
+
+
+# GET blocks up to headerhash. Inclusive of block with requested prevHeaderHash
+# TODO: Done
+@app.route('/read-blocks-from-winner', methods=['GET'])
+def read_blocks_from_winner():
+    with open('./{}/blockchain'.format(args.port), 'rb') as f:
+        bc = pickle.load(f)
+    # Read args
+    blockHeaderHash = request.args['header']
+    print(blockHeaderHash)
+    # iterate
+    list_of_blocks = []
+    height = len(bc.chain)
+    for i in range(height):
+        b = bc.chain[height - 1 - i]
+        list_of_blocks.append(b)
+        if b.header['prevHeaderHash'] == blockHeaderHash:
+            break
+    resp = pickle.dumps(list_of_blocks)
+    return Response(resp)
 
 # Deprecated
 # @app.route('/get-header', methods = ['GET'])
@@ -140,37 +187,6 @@ def read_block_header():
 #     resp.headers['Link'] = 'http://luisrei.com'
 #     return resp
 
-
-# # For checking who found a new nonce
-# @app.route('/read-blockchain-height', methods=['GET'])
-# def read_blockchain_length():
-#     f = open('./{}/blockchain'.format(args.port), 'rb').read()
-#     bc = pickle.load(f)
-#     f.close()
-#     height = len(bc.chain)
-# 	return height
-
-# # GET blocks up to certain depth
-# @app.route('/read-block', methods=['GET'])
-# def read_block():
-#     # Read blockchain from binary
-#     f = open('./{}/blockchain'.format(args.port), 'rb').read()
-#     bc = pickle.load(f)
-#     # with open('data.pickle', 'rb') as f:
-#     # data = pickle.load(f)
-
-#     # Read args
-#     # blockHeader = request.args.get('header')
-#     blockHeaderHash = request.args['header']
-
-#     # iterate
-#     list_of_blocks = []
-#     height = len(bc.chain)
-#     for i in range(height):
-#         bc.chain[height - 1 - i]
-#     list_of_blocks = list(filter(lambda b: b!=self.myId, MINER_ADDR))          # Filter myId from all Ids      
-
-# 	return
 
 
 # Deprecated: Use local write instead

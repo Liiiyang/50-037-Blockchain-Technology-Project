@@ -32,6 +32,7 @@ from block import Block
 import time
 
 MINER_PORT = [5000, 5010, 5020, 5030, 5040]
+MINER_PORT = [5000, 5010]
 # TODO: Read all miner's public key
 MINER_PUBKEY = {}
 
@@ -45,27 +46,30 @@ class Miner():
             if minerId == myId:
                 continue
             r = requests.get('http://127.0.0.1:{}/read-blockchain'.format(minerId))
-            if r.text != 'blockchain unavailable':
+            if r.status_code != 202:
                 foundBlockchain = True
                 bc = pickle.loads(r.content)
+                f = open('./{}/blockchain'.format(myId),'wb')
+                pickle.dump(bc,f)
+                f.close()
                 break
         if foundBlockchain == False:
             bc = Blockchain.new()
-            f = file('./{}/blockchain'.format(myid),'wb')
+            f = open('./{}/blockchain'.format(myId),'wb')
             pickle.dump(bc,f)
             f.close()
             # Current Miner writes local. Other Miners read through network
             # r = requests.post('http://127.0.0.1:{}/update-blockchain'.format(myId), data=bc, headers={'Content-Type': 'application/octet-stream'})
 
         # TODO: Read my public & private keys
-        vk = VerifyingKey.from_pem(open('vk_{}.pem'.format(myId)).read())
-        sk = SigningKey.from_pem(open('sk_{}.pem'.format(myId)).read())
+        vk = VerifyingKey.from_pem(open('./{}/vk.pem'.format(myId)).read())
+        sk = SigningKey.from_pem(open('./{}/sk.pem'.format(myId)).read())
         sk_string = sk.to_string()
 
         self.blockchain = bc
         self.myId = myId
         self.myPubKey = vk
-        self.mySecretKey = sk
+        self.mySecretKey = sk_string
 
     def _update_blockchain(self, newBlockchain):
         with open('./{}/blockchain'.format(self.myId)) as f:
@@ -87,21 +91,20 @@ class Miner():
                 # HTTP GET all transactions
                 r = requests.get('http://127.0.0.1:{}/read-transactions'.format(self.myId))
                 list_of_pending_tx = json.loads(r.json, object_hook=lambda d: namedtuple('X', d.keys())(*d.values()))
-
                 # Verify 
                 self._validate_with_global_addrBal(list_of_pending_tx,currentBlockchain)
                 # TODO: Create block
-                Transaction.new(self.myPubKey, 'coinbase', 100, self.mySecretKey)
-                list_of_pending_tx.
-                newBlock = Block(time.time(),)
-                currentBlockchain.add()
+                cTx = Transaction.new(self.myPubKey, 'coinbase', 100, self.mySecretKey)
+                list_of_pending_tx.append(cTx)
+                newBlock = Block(time.time(), prevHeaderHash, newNonce, list_of_pending_tx)
+                currentBlockchain.newAdd(newBlock, newNonce)
                 # TODO: Overwrite local blockchain file.
-                # r = requests.post('http://127.0.0.1:{}/update-blockchain'.format(self.myId), data=)
+                self._update_blockchain(currentBlockchain)
             elif hasFound == False:
                 # update block-to-mine
                 # TODO: Get latest chain-of-blocks
                 payload = { 'header': currentLastBlock['prevHeaderHash'] }
-                r = requests.get('http://127.0.0.1:{}/read-blocks'.format(minerId), params=payload)
+                r = requests.get('http://127.0.0.1:{}/read-blocks-from-winner'.format(minerId), params=payload)
                 list_of_newBlocks = pickle.loads(r.content)
                 # TODO: Verify list_of_blocks with current miner's blockchain
                 depth = len(list_of_newBlocks)
@@ -114,9 +117,13 @@ class Miner():
                         isVerified = False
                         break
                     if i == depth-1:
+                        # TODO: Update current blockchain
+                        currentLastBlock = list_of_newBlocks[depth-1]
+                        currentBlockchain.pop()
+                        currentBlockchain.append(list_of_newBlocks)
+                        self._update_blockchain
                         break
-                # TODO: Update current blockchain
-                currentLastBlock = list_of_newBlocks[depth-1]
+
                 # Ref: http://docs.python-requests.org/en/master/user/quickstart/#passing-parameters-in-urls
             else:
                 print("Mining stopped")
@@ -196,17 +203,6 @@ class Miner():
         pass
 
 
-new_tx = Transaction.new("you", "me", 5000, sk_string,"First Transaction")
-hash_tx = hashlib.sha256(str(new_tx).encode()).hexdigest()
-print(hash_tx)
-data = {
-       'Transaction'  : hash_tx,
-    }
-r = requests.post('http://127.0.0.1:5000/create-transaction', json=data)
-print(r)
-
-r = requests.get('http://127.0.0.1:5000/get-header')
-print(r.text)
 
 #while True:
 #    r = requests.get('http://127.0.0.1:5000/mine')
@@ -224,14 +220,6 @@ print(r.text)
 #        block = random.randrange(2**256)
 #        str_block = str(block)
 #        print("Finding Another Nonce.." + str_block)
-
-data = open("myObject", "rb").read()
-r = requests.post('http://127.0.0.1:5000/mine', data=data,
-                    headers={'Content-Type': 'application/octet-stream'})
-
-r = requests.get('http://127.0.0.1:5000/mine/binary')
-me = pickle.loads(r.content)
-print(me.last_block.getHeaderInHash())
 
 '''
 Miner Behavior

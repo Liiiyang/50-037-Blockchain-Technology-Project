@@ -85,6 +85,7 @@ class Blockchain:
                 else:
                     myHeight = len(self.chain)
                     for minerId in list_of_otherMiners:
+                        # TODO: do this!
                         r = requests.get('http://127.0.0.1:{}/read-blockchain-height'.format(minerId))
                         if int(r.content) > myHeight:
                             return (False, 0, '', minerId)
