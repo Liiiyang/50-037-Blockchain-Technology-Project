@@ -85,22 +85,27 @@ class Miner():
         otherMiners = list(filter(lambda x: x!=self.myId, MINER_PORT))          # Filter myId from all Ids      
 
         isVerified = True
+        count = 0
         while isVerified:
             # mining and listening???
+            count += 1
             hasFound, newNonce, prevHeaderHash, minerId = currentBlockchain.proof_of_work(currentLastBlock, otherMiners)
-            if hasFound == True:
+            if hasFound == True and count < 100:
                 # make new block
                 # HTTP GET all transactions
                 print("success")
                 r = requests.get('http://127.0.0.1:{}/read-transactions'.format(self.myId))
                 r_ls = Transaction.from_json(r.text)["AllTransactions"]
+                
                 list_of_pending_tx = []
                 for r_tx in r_ls:
-                    tx = Transaction.from_json(r_tx)
+                    print(type(r_tx))
+                    # tx = Transaction.from_json(r_tx)
+                    tx = json.dumps(r_tx)
                     list_of_pending_tx.append(tx)
-                print(list_of_pending_tx)
-                print(type(r_ls[0]))
-                print(type(list_of_pending_tx[0]))
+                # print(list_of_pending_tx)
+                # print(type(r_ls[0]))
+                # print(type(list_of_pending_tx[0]))
                 # TODO: Verify 
                 # self._validate_with_global_addrBal(list_of_pending_tx, currentBlockchain)
                 # TODO: Create block
@@ -109,16 +114,15 @@ class Miner():
                 cTx = cTx.to_json()
                 # list_of_pending_tx.append(cTx)
                 # newBlock = Block(time.time(), prevHeaderHash, newNonce, list_of_pending_tx)
-                r_ls.append(cTx)
-                newBlock = Block(time.time(), prevHeaderHash, newNonce, r_ls)
+                list_of_pending_tx.append(cTx)
+                newBlock = Block(time.time(), prevHeaderHash, newNonce, list_of_pending_tx)
                 currentBlockchain.newAdd(newBlock, newNonce)
                 # TODO: Overwrite local blockchain file.
-                print(type(currentBlockchain))
                 self._update_blockchain(currentBlockchain)
             elif hasFound == False:
+                print("Check")
                 # update block-to-mine
                 # TODO: Get latest chain-of-blocks
-                print(type(currentLastBlock))
                 currentLastBlockHeader = currentLastBlock.header['prevHeaderHash']
                 payload = { 'header': currentLastBlockHeader }
                 r = requests.get('http://127.0.0.1:{}/read-blocks-from-winner'.format(minerId), params=payload)
@@ -127,8 +131,10 @@ class Miner():
                 depth = len(list_of_newBlocks)
                 for i in range(depth):
                     newBlock = list_of_newBlocks[depth-1-i]
+                    print("newBlock header: " + newBlock.header['prevHeaderHash'])
                     prevBlock = list_of_newBlocks[depth-1-i-1]
-                    if newBlock.header['prevHeaderHash'] != prevBlock.getHeaderInHash:
+                    print("prevBlock header: " + prevBlock.header['prevHeaderHash'])
+                    if newBlock.header['prevHeaderHash'] != prevBlock.getHeaderInHash():
                         # If hashes not chained, then verification failed
                         print("Verification failed")
                         isVerified = False

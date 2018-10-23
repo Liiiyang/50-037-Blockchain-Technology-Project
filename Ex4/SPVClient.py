@@ -20,14 +20,14 @@ Integrate your implementation with your simulator from the previous exercise. Te
 import requests
 import json
 # from requests.auth import HTTPBasicAuth
-from transaction import Transaction
+from Transaction import Transaction
 from ecdsa import SigningKey, VerifyingKey, NIST192p
 import hashlib
 import argparse
 import pickle
 
-vk = VerifyingKey.from_pem(open("vk.pem").read())
-sk = SigningKey.from_pem(open("sk.pem").read())
+vk = VerifyingKey.from_pem(open("./1/vk.pem").read())
+sk = SigningKey.from_pem(open("./1/sk.pem").read())
 sk_string = sk.to_string()
 
 new_tx = Transaction.new("you", "me", 5000, sk_string,"First Transaction")
