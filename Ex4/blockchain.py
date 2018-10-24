@@ -8,7 +8,6 @@ import requests # A bit clunky OOP?
 class Blockchain:
 
     difficulty = 2
-    # TARGET = '00000ffff'
     TARGET = '0000fffff'
     LISTEN_RATE = 10000             # Higher number => Slower rate
 

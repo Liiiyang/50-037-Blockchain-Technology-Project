@@ -41,7 +41,7 @@ MINER_PUBKEY = {}
 class Miner():
 	   # TARGET = 5			# Set from 
     
-    def __init__(self, myId):
+    def __init__(self, myId, debugStop=1000000000):
         # HTTP GET Blockchain from other miners
         foundBlockchain = False
         for minerId in MINER_PORT:
@@ -72,6 +72,7 @@ class Miner():
         self.myId = myId
         self.myPubKey = vk
         self.mySecretKey = sk_string
+        self.debugStop = debugStop
 
     def _update_blockchain(self, newBlockchain):
         with open('./{}/blockchain'.format(self.myId), 'wb') as f:
@@ -91,48 +92,32 @@ class Miner():
             count += 1
             hasFound, newNonce, prevHeaderHash, minerId = currentBlockchain.proof_of_work(currentLastBlock, otherMiners)
             if hasFound == True and count < 100:
-                # make new block
-                # HTTP GET all transactions
                 r = requests.get('http://127.0.0.1:{}/read-transactions'.format(self.myId))
                 r_ls = Transaction.from_json(r.text)["AllTransactions"]
-                
                 list_of_pending_tx = []
-                list_of_pending_txObj = []
+                # list_of_pending_txObj = []
                 for r_tx in r_ls:
-                    # print(type(r_tx))
                     tx = Transaction.from_json(r_tx)
-                    # tx = json.dumps(r_tx)
-                    # print(type(tx))
-                    # print(r_tx)
                     list_of_pending_tx.append(tx)
-                    list_of_pending_txObj.append(r_tx)
-                # print(r_ls)
-                # TODO: Verify 
-                # self._validate_with_global_addrBal(list_of_pending_tx, currentBlockchain)
+                    # list_of_pending_txObj.append(r_tx)
                 final_list = self._validate_with_global_addrBal(list_of_pending_tx, currentBlockchain)
                 final_json_list = []
                 for d in final_list:
                     tx = json.dumps(d)
                     final_json_list.append(tx)
-                # TODO: Create block
                 cTx = Transaction.new(str(self.myId), 'coinbase', 100, self.mySecretKey)
                 cTx = cTx.to_json()
-                # list_of_pending_tx.append(cTx)
-                # newBlock = Block(time.time(), prevHeaderHash, newNonce, list_of_pending_tx)
-                # list_of_pending_tx.append(cTx)
-                # r_ls.append(cTx)
                 final_json_list.append(cTx)
-                # newBlock = Block(time.time(), prevHeaderHash, newNonce, r_ls)
                 newBlock = Block(time.time(), prevHeaderHash, newNonce, final_json_list)
                 currentBlockchain.newAdd(newBlock, newNonce)
                 self.blockchain = currentBlockchain
                 self._update_blockchain(currentBlockchain)
                 currentLastBlock = newBlock
-                # if count == 15:
-                #     for b in self.blockchain.chain:
-                #         print(b.transactions)
-                #     print("Debug stop")
-                #     isVerified = False
+                if count == self.debugStop:
+                    for b in self.blockchain.chain:
+                        print(b.transactions)
+                    print("Debug stop")
+                    isVerified = False
             elif hasFound == False:
                 # update block-to-mine
                 # TODO: Get latest chain-of-blocks
@@ -171,7 +156,7 @@ class Miner():
         validate = False
         # Check coinbase transaction
         coinbaseTx = block.transactions[len(block.transactions) - 1]
-        if (coinbaseTx.sender == 'coinbase') and (coinbaseTx.amount == 100):
+        if (coinbaseTx["sender"] == 'coinbase') and (coinbaseTx["amount"] == 100):
             validate = True
         else:
             return validate
@@ -186,6 +171,8 @@ class Miner():
     def _validate_with_global_addrBal(self, list_of_transactions, blockchain):
         # TODO: Control validation up to certain height
         BOOTSTRAPPED_HEIGHT = 3
+        if len(blockchain.chain) <= BOOTSTRAPPED_HEIGHT:
+            return list_of_transactions
         current_addrBal = {}
         for tx in list_of_transactions:
             snd = tx["sender"]
